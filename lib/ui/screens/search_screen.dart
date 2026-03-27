@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../viewmodels/player_viewmodel.dart';
 import 'profile_screen.dart';
+import '../widgets/goblin_trophy_animation.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -63,31 +64,16 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo / Icon
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                    ),
-                    child: const Icon(Icons.auto_awesome, size: 80, color: Colors.amber),
-                  ),
+      backgroundColor: Colors.transparent, // Make scaffold transparent
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Animated Goblin Trophy
+                const GoblinTrophyAnimation(size: 150),
                   const SizedBox(height: 32),
                   const Text(
                     'CR AI DECK BUILDER',
@@ -284,7 +270,6 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
         ),
-      ),
     );
   }
 

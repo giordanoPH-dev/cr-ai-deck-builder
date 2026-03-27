@@ -50,6 +50,26 @@ class MyApp extends StatelessWidget {
         textTheme: Typography.material2021().white.apply(fontFamily: 'Clash'),
         useMaterial3: true,
       ),
+      builder: (context, child) {
+        return Stack(
+          children: [
+            // Global Background
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/backgrounds/bg.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+            // Semi-transparent overlay to ensure content readability
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.3),
+              ),
+            ),
+            if (child != null) child,
+          ],
+        );
+      },
       home: const SearchScreen(),
     );
   }
