@@ -10,6 +10,10 @@ class AdService {
   bool get isAdLoaded => _isAdLoaded;
 
   Future<void> init() async {
+    if (kIsWeb) {
+      debugPrint('AdMob not initialized: Web platform is not supported in this configuration.');
+      return;
+    }
     await MobileAds.instance.initialize();
     _loadRewardedAd();
   }
@@ -35,12 +39,12 @@ class AdService {
   }
 
   Future<void> showRewardedAd({required Function onUserEarnedReward}) async {
-    if (_rewardedAd == null) {
-      debugPrint('Warning: Attempted to show ad before it was loaded.');
+    if (kIsWeb || _rewardedAd == null) {
+      debugPrint('Warning: Attempted to show ad before it was loaded or on unsupported platform.');
       // Proceed anyway if it's a test environment or show an error
       // In this app, we'll just execute the reward if it fails to load for better UX during dev.
       onUserEarnedReward();
-      _loadRewardedAd();
+      if (!kIsWeb) _loadRewardedAd();
       return;
     }
 

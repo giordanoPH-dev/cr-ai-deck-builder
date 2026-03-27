@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -11,8 +12,14 @@ Future<void> main() async {
   await dotenv.load(fileName: ".env");
   setupLocator(); // Initialize dependency injection
   
-  // Initialize Ads
-  await locator<AdService>().init();
+  // Initialize Ads (Only on Mobile)
+  if (!kIsWeb) {
+    try {
+      await locator<AdService>().init();
+    } catch (e) {
+      debugPrint('AdMob initialization failed: $e');
+    }
+  }
   
   runApp(
     MultiProvider(
