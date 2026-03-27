@@ -170,10 +170,29 @@ class _SearchScreenState extends State<SearchScreen> {
                                   if (viewModel.errorMessage != null)
                                     Padding(
                                       padding: const EdgeInsets.only(bottom: 16),
-                                      child: Text(
-                                        viewModel.errorMessage!,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: Text(
+                                                viewModel.errorMessage!,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   

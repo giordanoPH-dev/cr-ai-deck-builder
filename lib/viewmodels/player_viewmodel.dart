@@ -46,7 +46,7 @@ class PlayerViewModel extends ChangeNotifier {
       _playerProfile = results[0] as PlayerProfile;
       _battleLog = results[1] as List<CrBattle>;
     } catch (e) {
-      _errorMessage = 'Erro: $e';
+      _errorMessage = _mapErrorToMessage(e);
       _playerProfile = null;
       _battleLog = null;
     } finally {
@@ -109,10 +109,24 @@ class PlayerViewModel extends ChangeNotifier {
         },
       );
     } catch (e) {
-      _errorMessage = 'Error during analysis: $e';
+      _errorMessage = _mapErrorToMessage(e);
       _isAnalyzing = false;
       notifyListeners();
     }
+  }
+
+  String _mapErrorToMessage(dynamic e) {
+    final errorStr = e.toString().toLowerCase();
+    if (errorStr.contains('404')) {
+      return 'Player not found. Please double-check the tag and try again.';
+    } else if (errorStr.contains('403')) {
+      return 'API Access denied. Please ensure your API key is correctly configured.';
+    } else if (errorStr.contains('503') || errorStr.contains('500')) {
+      return 'Clash Royale servers are currently under maintenance.';
+    } else if (errorStr.contains('socketexception') || errorStr.contains('httpexception')) {
+      return 'Connection error. Please check your internet and try again.';
+    }
+    return 'An unexpected error occurred: $e';
   }
 
   void clear() {
