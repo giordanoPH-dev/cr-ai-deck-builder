@@ -19,9 +19,6 @@ class _SearchScreenState extends State<SearchScreen> {
   void initState() {
     super.initState();
     _loadSavedTag();
-    _focusNode.addListener(() {
-      print('[LOG] Campo de texto mudou de foco: ${_focusNode.hasFocus}');
-    });
   }
 
   Future<void> _loadSavedTag() async {
@@ -32,8 +29,6 @@ class _SearchScreenState extends State<SearchScreen> {
         setState(() {
           _tagController.text = savedTag;
         });
-        // Aciona a busca automática logo ao abrir o app e carregar a tag!
-        _searchPlayer();
       }
     }
   }
@@ -46,14 +41,11 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _searchPlayer() async {
-    print('[LOG] Iniciando busca...');
     final tag = _tagController.text.trim().toUpperCase();
     if (tag.isEmpty) return;
     
-    // Esconder o teclado
     FocusScope.of(context).unfocus();
 
-    // Salvar tag
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('saved_player_tag', tag);
     
@@ -71,102 +63,234 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('CR AI Deck Builder'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
+          ),
+        ),
+        child: SafeArea(
           child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.search_rounded, size: 80, color: Colors.blueAccent),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Encontre seu perfil',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Insira sua Player Tag do Clash Royale para analisar seu deck.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
+                  // Logo / Icon
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    ),
+                    child: const Icon(Icons.auto_awesome, size: 80, color: Colors.amber),
                   ),
                   const SizedBox(height: 32),
-                  TextField(
-                    controller: _tagController,
-                    focusNode: _focusNode,
-                    onTap: () => print('[LOG] TextField foi clicado!'),
-                    decoration: InputDecoration(
-                      labelText: 'Player Tag (ex: L8P22UR2)',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      prefixIcon: const Icon(Icons.tag),
-                      filled: true,
+                  const Text(
+                    'CR AI DECK BUILDER',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2.0,
                     ),
-                    onSubmitted: (_) {
-                      print('[LOG] Teclado confirmou submissão.');
-                      _searchPlayer();
-                    },
                   ),
-                  const SizedBox(height: 24),
-                  Consumer<PlayerViewModel>(
-                    builder: (context, viewModel, child) {
-                      return Column(
+                  const SizedBox(height: 4),
+                  const Text(
+                    'UNOFFICIAL FAN APP',
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'AI-POWERED STRATEGY & INSIGHTS',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 12,
+                      letterSpacing: 1.5,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  
+                  // Search Card
+                  Card(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          if (viewModel.errorMessage != null)
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 24),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.redAccent.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.redAccent),
+                          TextField(
+                            controller: _tagController,
+                            focusNode: _focusNode,
+                            style: const TextStyle(color: Colors.white, fontSize: 18),
+                            decoration: InputDecoration(
+                              labelText: 'PLAYER TAG',
+                              labelStyle: const TextStyle(color: Colors.amber),
+                              hintText: 'ex: L8P22UR2',
+                              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                              prefixIcon: const Icon(Icons.tag, color: Colors.amber),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                               ),
-                              child: SelectableText(
-                                viewModel.errorMessage!,
-                                style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                               ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: const BorderSide(color: Colors.amber),
+                              ),
+                              filled: true,
+                              fillColor: Colors.black.withValues(alpha: 0.2),
                             ),
-                          FilledButton(
-                            onPressed: viewModel.isLoading ? null : _searchPlayer,
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: viewModel.isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
+                            onSubmitted: (_) => _searchPlayer(),
+                          ),
+                          const SizedBox(height: 24),
+                          Consumer<PlayerViewModel>(
+                            builder: (context, viewModel, child) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (viewModel.errorMessage != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 16),
+                                      child: Text(
+                                        viewModel.errorMessage!,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                                      ),
                                     ),
-                                  )
-                                : const Text(
-                                    'Buscar Jogador',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  
+                                  ElevatedButton(
+                                    onPressed: viewModel.isLoading ? null : _searchPlayer,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.amber,
+                                      foregroundColor: Colors.black87,
+                                      padding: const EdgeInsets.symmetric(vertical: 18),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      elevation: 4,
+                                    ),
+                                    child: viewModel.isLoading
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.black87),
+                                            ),
+                                          )
+                                        : const Text(
+                                            'ANALYZE PROFILE',
+                                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                          ),
                                   ),
+                                ],
+                              );
+                            },
                           ),
                         ],
-                      );
-                    },
+                      ),
+                    ),
+                  ),
+                  // Help Section
+                  Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      leading: const Icon(Icons.help_outline, color: Colors.amber, size: 20),
+                      title: const Text(
+                        'Where is my Tag?',
+                        style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Column(
+                            children: [
+                              _buildStep(1, 'Open Clash Royale'),
+                              _buildStep(2, 'Tap your Name (Top Left)'),
+                              _buildStep(3, 'Copy the Tag under your Name'),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Example: #L8P22UR2',
+                                style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  // Disclaimer Footer
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'This material is unofficial and is not endorsed by Supercell. For more information see Supercell\'s Fan Content Policy: www.supercell.com/fan-content-policy.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        fontSize: 9,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Powered by Gemini AI',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      fontSize: 10,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildStep(int number, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 8,
+            backgroundColor: Colors.amber,
+            child: Text(
+              number.toString(),
+              style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black87),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(color: Colors.white70, fontSize: 11),
+            ),
+          ),
+        ],
       ),
     );
   }

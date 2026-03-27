@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'core/locator.dart';
+import 'services/ad_service.dart';
 import 'viewmodels/player_viewmodel.dart';
 import 'ui/screens/search_screen.dart';
 
@@ -9,6 +10,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   setupLocator(); // Initialize dependency injection
+  
+  // Initialize Ads
+  await locator<AdService>().init();
   
   runApp(
     MultiProvider(
