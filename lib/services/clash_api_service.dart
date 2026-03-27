@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/cr_models.dart';
 
@@ -15,6 +16,8 @@ class ClashApiService {
     final formattedTag = tag.startsWith('#') ? '%23${tag.substring(1)}' : '%23$tag';
     
     final uri = Uri.parse('$_baseUrl/players/$formattedTag');
+    debugPrint('ClashApiService: Fetching profile from $uri');
+    
     final response = await http.get(
       uri,
       headers: {
@@ -23,10 +26,12 @@ class ClashApiService {
       },
     );
 
+    debugPrint('ClashApiService: Response status ${response.statusCode}');
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body);
       return PlayerProfile.fromJson(jsonResponse);
     } else {
+      debugPrint('ClashApiService: Error body: ${response.body}');
       throw Exception('Failed to load player profile: ${response.statusCode} - ${response.body}');
     }
   }
