@@ -1,7 +1,7 @@
 /// Centralized application constants for timeouts, retries, and feature flags.
 ///
-/// These values are tuned for kiosk/totem environments where
-/// interactions should complete within 2 minutes max.
+/// These values are tuned for quick interactions
+/// that should complete within 2 minutes max.
 class AppConstants {
   AppConstants._();
 
@@ -26,5 +26,5 @@ class AppConstants {
 
   // ── Observability ────────────────────────────────────────
   static const String appIdentifier = 'cr-ai-deck-builder';
-  static const String deviceId = 'kiosk-001'; // Would be dynamic in production
+  static const String deviceId = 'device-001'; // Would be dynamic in production
 }

@@ -11,7 +11,7 @@ import '../observability/logger_service.dart';
 /// A resilient HTTP client with automatic retry, exponential backoff,
 /// configurable timeouts, and structured logging.
 ///
-/// Designed for kiosk reliability — network glitches should not crash the app.
+/// Network glitches should not crash the app.
 class ResilientHttpClient {
   final http.Client _client;
   final LoggerService _logger;

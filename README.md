@@ -5,7 +5,7 @@
 <h1 align="center">CR AI Deck Builder</h1>
 
 <p align="center">
-  <strong>Flutter • Clean Architecture • Gemini AI • Kiosk-Grade Resilience</strong>
+  <strong>Flutter • Clean Architecture • Gemini AI</strong>
 </p>
 
 <p align="center">
@@ -22,7 +22,7 @@
 
 Aplicativo Flutter que consome a **API oficial do Clash Royale** e utiliza **Google Gemini AI** para gerar relatórios estratégicos personalizados com sugestão de decks, coaching de meta-game e guias de batalha — tudo com base na coleção real do jogador.
 
-O projeto foi arquitetado com foco em **resiliência de quiosque/totem**: interações rápidas (< 2 min), fallback offline via cache local, retry automático com backoff exponencial, e observabilidade estruturada pronta para integração com pipelines de monitoramento em produção.
+O projeto foi arquitetado com foco em **resiliência**: interações rápidas (< 2 min), fallback offline via cache local, retry automático com backoff exponencial, e observabilidade estruturada pronta para integração com pipelines de monitoramento em produção.
 
 > ⚠️ *This material is unofficial and is not endorsed by Supercell.*
 
@@ -83,14 +83,6 @@ graph TB
 | **Use Cases** | `GetPlayerProfile` orquestra busca paralela de perfil + batalhas. `GetAiStrategy` valida regras de negócio antes de chamar a LLM. |
 | **Repository Pattern** | Abstração que decide transparentemente se busca dados da API ou do cache local (offline-first). |
 
-### Como isso se aplica a quiosques/totems
-
-Em um cenário de quiosque com tablets, a arquitetura atual permite:
-
-1. **Trocar data sources sem risco** — Se a empresa migrar de Clash Royale API para um backend próprio, basta criar um novo `Datasource` e registrar no DI. Nenhum use case ou Cubit muda.
-2. **Adicionar features isoladamente** — Uma nova tela de "Ranking" seria: nova entidade + novo use case + novo Cubit + nova screen. Zero acoplamento com o fluxo existente.
-3. **Testar unitariamente cada camada** — Mockar repositories para testar use cases. Mockar use cases para testar Cubits.
-
 ---
 
 ## 🔄 Gerenciamento de Estado
@@ -109,7 +101,7 @@ O uso de `sealed class` + `switch expressions` garante **exhaustive matching** n
 
 ---
 
-## 🛡️ Resiliência (Kiosk-Grade)
+## 🛡️ Resiliência
 
 ### Cenários de Falha Tratados
 
@@ -202,7 +194,7 @@ Simula despacho de alertas críticos. Quando a LLM falha após todos os retries:
 {
   "severity": "CRITICAL",
   "source": "cr-ai-deck-builder",
-  "device_id": "kiosk-001",
+  "device_id": "device-001",
   "event": "LLM_FAILURE",
   "message": "Gemini failed after 3 retries",
   "timestamp": "2026-04-03T23:31:58.000Z",
@@ -306,7 +298,7 @@ flutter analyze                 # Static analysis (0 errors)
 | **Terraform** | A arquitetura de camadas facilita containerização. Cada camada poderia ser um módulo Terraform separado em uma arquitetura de microsserviços. |
 | **TypeScript Backend** | O padrão Repository + Use Case é idêntico ao Clean Architecture em Node.js/TypeScript. A migração de conceitos é 1:1. |
 | **Telegram Agents** | AlertDispatcher simula o envio de eventos estruturados para bots de monitoramento, com severity levels e device_id. |
-| **Kiosk/Totem** | Timeout de 10s para API, 30s para LLM, retry 3x, cache offline — tudo otimizado para interações de até 2 minutos. |
+| **Resiliência** | Timeout de 10s para API, 30s para LLM, retry 3x, cache offline — tudo otimizado para interações de até 2 minutos. |
 
 ---
 

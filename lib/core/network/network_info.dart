@@ -1,9 +1,8 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// Abstraction for checking network connectivity.
-/// Allows fail-fast behavior when offline — critical for kiosk environments
-/// where showing a "no connection" state immediately is better UX than
-/// waiting for a timeout.
+/// Allows fail-fast behavior when offline — showing a "no connection" state
+/// immediately is better UX than waiting for a timeout.
 abstract class NetworkInfo {
   Future<bool> get isConnected;
 }

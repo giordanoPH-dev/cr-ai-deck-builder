@@ -7,7 +7,7 @@ import 'package:logger/logger.dart' as pkg;
 /// All log entries are emitted as structured JSON, matching the format
 /// expected by cloud-native observability tools (Cloud Logging, Datadog, etc.).
 ///
-/// In a production kiosk deployment, these logs would be shipped to
+/// In production, these logs would be shipped to
 /// GCP Cloud Logging via a sidecar agent or Fluentd.
 abstract class LoggerService {
   void debug(String message, {Map<String, dynamic>? metadata});

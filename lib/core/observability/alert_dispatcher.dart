@@ -4,7 +4,7 @@ import '../constants/app_constants.dart';
 
 /// Simulates dispatching critical alerts to external monitoring systems.
 ///
-/// In a production kiosk deployment, this would send structured events to:
+/// In production, this would send structured events to:
 /// - **Telegram Bot** (like "Claudemir" / "Mani" agents) for real-time team alerts
 /// - **Sentry** for error tracking and crash analytics
 /// - **GCP Cloud Monitoring** for SLO/SLA dashboards

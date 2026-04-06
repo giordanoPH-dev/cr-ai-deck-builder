@@ -10,7 +10,7 @@ import '../models/battle_model.dart';
 /// Local data source using SharedPreferences for offline cache.
 ///
 /// Stores the last-fetched player profile and battle log so the app
-/// can display data even when offline — critical for kiosk resilience.
+/// can display data even when offline.
 abstract class PlayerLocalDatasource {
   Future<PlayerProfileModel?> getCachedProfile();
   Future<List<CrBattleModel>?> getCachedBattleLog();
