@@ -155,12 +155,13 @@ Preferred Style: ${preferredArchetype.toUpperCase()}
 }
 
 RULES:
-- Suggest EXACTLY 8 cards, all from the player's collection
-- Prioritize highest-level cards
+- Suggest EXACTLY 8 cards, all strictly sourced from the player's collection
+- DO NOT lazily output their current deck unless it is an absolute masterpiece for the current meta. Build a NEW optimally synergistic deck for them!
+- Prioritize highest-level cards for ladder competitiveness.
 - If collection cannot support the preferred style, suggest closest viable alternative and explain in playstyle_analysis
-- confidence_score: 1.0 = perfect fit, 0.5 = compromise, below 0.3 = weak suggestion
 - Keep ALL text fields concise (2-3 sentences max each)
-- Response must be ONLY the JSON object, no markdown, no code blocks, no extra text
+- ALL text responses MUST BE in English.
+- Response must be ONLY the JSON object, absolutely no markdown formatting, no code blocks, no extra text
 ''';
   }
 }

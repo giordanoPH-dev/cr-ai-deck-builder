@@ -14,8 +14,12 @@ import '../blocs/player/player_cubit.dart';
 import '../blocs/player/player_state.dart';
 import '../blocs/ai_strategy/ai_strategy_cubit.dart';
 import '../blocs/ai_strategy/ai_strategy_state.dart';
+import '../blocs/ai_strategy/saved_strategies_cubit.dart';
+import '../blocs/ai_strategy/saved_strategies_state.dart';
 import '../widgets/error_display_widget.dart';
 import '../widgets/strategy_report_card.dart';
+import '../widgets/native_ad_widget.dart';
+import '../widgets/banner_ad_widget.dart';
 
 /// Profile screen — displays player data and AI strategy analysis.
 ///
@@ -41,8 +45,11 @@ class ProfileScreen extends StatelessWidget {
         final profile = playerState.profile;
         final battleLog = playerState.battles;
 
+        // Fetch saved strategies when the profile is loaded
+        context.read<SavedStrategiesCubit>().fetchSavedStrategies(profile.tag);
+
         return DefaultTabController(
-          length: 3,
+          length: 4,
           child: Scaffold(
             backgroundColor: const Color(0xFF0D47A1),
             appBar: AppBar(
@@ -87,6 +94,7 @@ class ProfileScreen extends StatelessWidget {
                       children: [
                         _buildProfileHeader(context, profile),
                         _buildAiAnalysisCard(context, profile, battleLog),
+                        const NativeAdWidget(adUnitId: 'ca-app-pub-8273819403150038/2211435830'),
                         const SizedBox(height: 8),
                         const TabBar(
                           labelColor: Colors.amber,
@@ -97,7 +105,8 @@ class ProfileScreen extends StatelessWidget {
                           tabs: [
                             Tab(text: 'DECK', icon: Icon(Icons.style)),
                             Tab(text: 'CARDS', icon: Icon(Icons.grid_view)),
-                            Tab(text: 'HISTORY', icon: Icon(Icons.history)),
+                            Tab(text: 'BATTLES', icon: Icon(Icons.history)),
+                            Tab(text: 'SAVED', icon: Icon(Icons.cloud_done)),
                           ],
                         ),
                         SizedBox(
@@ -109,6 +118,7 @@ class ProfileScreen extends StatelessWidget {
                                 _buildCardGrid(context, profile.currentDeck, emptyMessage: 'Deck not found'),
                                 _buildCardGrid(context, profile.cards, emptyMessage: 'Cards not found'),
                                 _buildHistoryTab(context, battleLog),
+                                _buildSavedTab(context, profile.tag),
                               ],
                             ),
                           ),
@@ -135,6 +145,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ],
             ),
+            bottomNavigationBar: const BannerAdWidget(adUnitId: 'ca-app-pub-8273819403150038/5940370812'),
           ),
         );
       },
@@ -211,6 +222,23 @@ class ProfileScreen extends StatelessWidget {
                         child: StrategyReportCard(
                           report: report,
                           onReAnalyze: () => _triggerAnalysis(context, profile, battleLog),
+                          onSave: () async {
+                            await context.read<AiStrategyCubit>().saveStrategy(
+                              report: report,
+                              playerTag: profile.tag,
+                            );
+                            if (context.mounted) {
+                              // Refresh the saved list
+                              context.read<SavedStrategiesCubit>().fetchSavedStrategies(profile.tag);
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Estratégia salva na nuvem com sucesso!'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          },
                         ),
                       ),
                     AiStrategyError(:final failure) => Padding(
@@ -371,7 +399,7 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 _buildStatItem('TROPHIES', profile.trophies.toString(), Icons.emoji_events, Colors.amber),
                 _buildStatDivider(),
-                _buildStatItem('ARENA', profile.arenaName, Icons.account_balance, Colors.blueAccent),
+                _buildArenaStatItem(profile.arenaName),
               ],
             ),
           ],
@@ -387,10 +415,33 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildStatItem(String label, String value, IconData icon, Color iconColor) {
     return Column(
       children: [
-        Icon(icon, color: iconColor, size: 28),
-        const SizedBox(height: 6),
+        Icon(icon, color: iconColor, size: 36),
+        const SizedBox(height: 2),
         Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
         Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 1.0)),
+      ],
+    );
+  }
+
+  Widget _buildArenaStatItem(String arenaName) {
+    String formatted = arenaName.toLowerCase().replaceAll(' ', '_');
+    if (!formatted.endsWith('_arena')) formatted += '_arena';
+    final arenaImagePath = 'assets/images/arenas/$formatted.png';
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 36,
+          width: 36,
+          child: Image.asset(
+            arenaImagePath,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_balance, color: Colors.blueAccent, size: 36),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(arenaName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+        const Text('ARENA', style: const TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 1.0)),
       ],
     );
   }
@@ -403,8 +454,8 @@ class ProfileScreen extends StatelessWidget {
     }
     return GridView.builder(
       padding: const EdgeInsets.all(16.0),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 110,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
         childAspectRatio: 0.75,
         crossAxisSpacing: 12,
         mainAxisSpacing: 16,
@@ -565,6 +616,86 @@ class ProfileScreen extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildSavedTab(BuildContext context, String playerTag) {
+    return BlocBuilder<SavedStrategiesCubit, SavedStrategiesState>(
+      builder: (context, state) {
+        return switch (state) {
+          SavedStrategiesLoading() => const Center(
+              child: SpinKitPulse(color: Colors.amber, size: 40),
+            ),
+          SavedStrategiesLoaded(:final reports) => reports.isEmpty
+              ? const Center(
+                  child: Text(
+                    'Nenhuma estratégia salva ainda.',
+                    style: TextStyle(color: Colors.white54, fontSize: 13),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: reports.length,
+                  itemBuilder: (context, index) {
+                    final report = reports[index];
+                    return Card(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+                      ),
+                      child: ListTile(
+                        leading: const Icon(Icons.auto_awesome, color: Colors.amber),
+                        title: Text(
+                          report.suggestedDeckNames.join(', '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        subtitle: Text(
+                          report.playstyleAnalysis,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: Colors.white70, fontSize: 11),
+                        ),
+                        trailing: const Icon(Icons.chevron_right, color: Colors.white30),
+                        onTap: () {
+                          // Show full report in a dialog or navigate
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: const Color(0xFF1A237E),
+                            isScrollControlled: true,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                            ),
+                            builder: (context) => DraggableScrollableSheet(
+                              initialChildSize: 0.7,
+                              maxChildSize: 0.9,
+                              minChildSize: 0.5,
+                              expand: false,
+                              builder: (context, scrollController) => SingleChildScrollView(
+                                controller: scrollController,
+                                padding: const EdgeInsets.all(24),
+                                child: StrategyReportCard(report: report),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+          SavedStrategiesError(:final failure) => Center(
+              child: Text(
+                failure.message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+              ),
+            ),
+          SavedStrategiesInitial() => const SizedBox.shrink(),
+        };
+      },
     );
   }
 }

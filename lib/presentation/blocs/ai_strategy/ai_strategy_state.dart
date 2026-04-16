@@ -12,7 +12,11 @@ sealed class AiStrategyState extends Equatable {
 
 /// Initial state — no analysis requested.
 class AiStrategyInitial extends AiStrategyState {
-  const AiStrategyInitial();
+  final String archetype;
+  const AiStrategyInitial({this.archetype = 'Aggressive (Beatdown)'});
+
+  @override
+  List<Object?> get props => [archetype];
 }
 
 /// Analysis in progress — show loading animation.

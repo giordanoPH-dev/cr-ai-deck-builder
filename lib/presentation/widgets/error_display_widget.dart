@@ -81,6 +81,7 @@ class ErrorDisplayWidget extends StatelessWidget {
       ServerFailure() => Icons.cloud_off_rounded,
       LlmFailure() => Icons.psychology_alt_rounded,
       CacheFailure() => Icons.storage_rounded,
+      DatabaseFailure() => Icons.cloud_off_rounded,
       UnknownFailure() => Icons.error_outline_rounded,
     };
   }
@@ -92,6 +93,7 @@ class ErrorDisplayWidget extends StatelessWidget {
       ServerFailure() => Colors.redAccent,
       LlmFailure() => Colors.purpleAccent,
       CacheFailure() => Colors.blueGrey,
+      DatabaseFailure() => Colors.redAccent,
       UnknownFailure() => Colors.redAccent,
     };
   }
@@ -103,6 +105,7 @@ class ErrorDisplayWidget extends StatelessWidget {
       ServerFailure() => 'Erro no Servidor',
       LlmFailure() => 'Falha na Análise IA',
       CacheFailure() => 'Erro de Cache',
+      DatabaseFailure() => 'Erro na Nuvem',
       UnknownFailure() => 'Erro Inesperado',
     };
   }

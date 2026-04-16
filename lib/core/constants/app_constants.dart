@@ -12,11 +12,11 @@ class AppConstants {
   static const Duration retryBaseDelay = Duration(seconds: 1);
 
   // ── Clash Royale API ─────────────────────────────────────
-  static const String clashApiBaseUrl = 'https://api.clashroyale.com/v1';
+  static const String clashApiBaseUrl = 'https://proxy.royaleapi.dev/v1';
   static const String deckLinkBaseUrl = 'https://link.clashroyale.com/deck/en?deck=';
 
   // ── LLM ──────────────────────────────────────────────────
-  static const String geminiModel = 'gemini-2.0-flash';
+  static const String geminiModel = 'gemini-2.5-flash-lite';
   static const int maxBattlesForAnalysis = 15;
 
   // ── Cache ────────────────────────────────────────────────

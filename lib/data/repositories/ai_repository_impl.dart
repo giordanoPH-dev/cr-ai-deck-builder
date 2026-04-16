@@ -10,18 +10,18 @@ import '../../domain/entities/player.dart';
 import '../../domain/entities/battle.dart';
 import '../../domain/repositories/ai_repository.dart';
 import '../datasources/ai_datasource.dart';
+import '../datasources/supabase_datasource.dart';
 
-/// Implementation of [AiRepository] with:
-/// - Retry logic (up to [AppConstants.maxRetries] attempts)
-/// - Hallucination detection via structured JSON parsing
-/// - Critical alert dispatch on total failure
+/// Implementation of [AiRepository] with Supabase sync support.
 class AiRepositoryImpl implements AiRepository {
   final AiDatasource datasource;
+  final SupabaseDatasource supabaseDatasource;
   final LoggerService logger;
   final AlertDispatcher alertDispatcher;
 
   AiRepositoryImpl({
     required this.datasource,
+    required this.supabaseDatasource,
     required this.logger,
     required this.alertDispatcher,
   });
@@ -34,7 +34,7 @@ class AiRepositoryImpl implements AiRepository {
   }) async {
     if (!datasource.isAvailable) {
       return const Left(LlmFailure(
-        message: 'Serviço de IA não configurado. Forneça uma chave Gemini API válida.',
+        message: 'AI service not configured. Please provide a valid Gemini API key.',
         code: 'LLM_NOT_CONFIGURED',
       ));
     }
@@ -106,9 +106,38 @@ class AiRepositoryImpl implements AiRepository {
     );
 
     return Left(LlmFailure(
-      message: 'A análise de IA falhou após ${AppConstants.maxRetries} tentativas. '
-          'Tente novamente em alguns instantes.',
+      message: 'AI analysis failed after ${AppConstants.maxRetries} attempts. '
+          'Please try again shortly.',
       rawResponse: lastException?.rawResponse,
     ));
+  }
+
+  @override
+  Future<Either<Failure, void>> saveStrategy({
+    required AiStrategyReport report,
+    required String playerTag,
+  }) async {
+    try {
+      await supabaseDatasource.saveAiStrategy(report, playerTag);
+      return const Right(null);
+    } catch (e) {
+      logger.error('Failed to save strategy to Supabase', error: e);
+      return Left(DatabaseFailure(
+        message: 'Could not save strategy to the cloud: ${e.toString()}',
+      ));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<AiStrategyReport>>> getSavedStrategies(String playerTag) async {
+    try {
+      final reports = await supabaseDatasource.getSavedAiStrategies(playerTag);
+      return Right(reports);
+    } catch (e) {
+      logger.error('Failed to fetch strategies from Supabase', error: e);
+      return Left(DatabaseFailure(
+        message: 'Could not load saved strategies: ${e.toString()}',
+      ));
+    }
   }
 }

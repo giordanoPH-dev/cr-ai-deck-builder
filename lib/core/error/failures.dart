@@ -65,6 +65,14 @@ class CacheFailure extends Failure {
   });
 }
 
+/// Supabase or other remote database errors.
+class DatabaseFailure extends Failure {
+  const DatabaseFailure({
+    required super.message,
+    super.code = 'DATABASE_ERROR',
+  });
+}
+
 /// Catch-all for truly unexpected errors.
 class UnknownFailure extends Failure {
   const UnknownFailure({

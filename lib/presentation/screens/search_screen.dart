@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../blocs/player/player_cubit.dart';
 import '../blocs/player/player_state.dart';
 import '../widgets/error_display_widget.dart';
 import '../widgets/goblin_trophy_animation.dart';
+import '../widgets/banner_ad_widget.dart';
 import 'profile_screen.dart';
 
 /// Search screen — entry point of the application.
@@ -227,6 +229,30 @@ class _SearchScreenState extends State<SearchScreen> {
                                 'Example: #L8P22UR2',
                                 style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold),
                               ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  final uri = Uri.parse('clashroyale://');
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri);
+                                  } else {
+                                    final storeUri = Uri.parse('https://play.google.com/store/apps/details?id=com.supercell.clashroyale');
+                                    await launchUrl(storeUri, mode: LaunchMode.externalApplication);
+                                  }
+                                },
+                                icon: const Icon(Icons.open_in_new, size: 16),
+                                label: const Text(
+                                  'OPEN CLASH ROYALE',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber,
+                                  foregroundColor: Colors.black87,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -262,6 +288,7 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: const BannerAdWidget(adUnitId: 'ca-app-pub-8273819403150038/5940370812'),
     );
   }
 

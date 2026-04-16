@@ -10,11 +10,13 @@ import '../../domain/entities/ai_strategy_report.dart';
 class StrategyReportCard extends StatelessWidget {
   final AiStrategyReport report;
   final VoidCallback? onReAnalyze;
+  final VoidCallback? onSave;
 
   const StrategyReportCard({
     super.key,
     required this.report,
     this.onReAnalyze,
+    this.onSave,
   });
 
   @override
@@ -70,6 +72,25 @@ class StrategyReportCard extends StatelessWidget {
             icon: const Icon(Icons.download_rounded),
             label: const Text(
               'IMPORTAR DECK NO CLASH ROYALE',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+            ),
+          ),
+
+        const SizedBox(height: 12),
+
+        // Save to Cloud Button
+        if (onSave != null)
+          OutlinedButton.icon(
+            onPressed: onSave,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.amber,
+              side: const BorderSide(color: Colors.amber),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            ),
+            icon: const Icon(Icons.cloud_upload_outlined, size: 18),
+            label: const Text(
+              'SALVAR NA NUVEM (SUPABASE)',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
             ),
           ),

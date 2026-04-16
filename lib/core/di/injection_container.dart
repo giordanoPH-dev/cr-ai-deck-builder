@@ -3,16 +3,22 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../data/datasources/ai_datasource.dart';
 import '../../data/datasources/clash_api_datasource.dart';
 import '../../data/datasources/player_local_datasource.dart';
+import '../../data/datasources/supabase_datasource.dart';
 import '../../data/repositories/ai_repository_impl.dart';
 import '../../data/repositories/player_repository_impl.dart';
 import '../../domain/repositories/ai_repository.dart';
 import '../../domain/repositories/player_repository.dart';
 import '../../domain/usecases/get_ai_strategy.dart';
 import '../../domain/usecases/get_player_profile.dart';
+import '../../domain/usecases/save_ai_strategy.dart';
+import '../../domain/usecases/get_saved_strategies.dart';
 import '../../presentation/blocs/ai_strategy/ai_strategy_cubit.dart';
+import '../../presentation/blocs/ai_strategy/saved_strategies_cubit.dart';
 import '../../presentation/blocs/player/player_cubit.dart';
 import '../../services/ad_service.dart';
 import '../network/http_client.dart';
@@ -30,6 +36,16 @@ final GetIt sl = GetIt.instance;
 /// All business dependencies are registered against their abstractions,
 /// making it trivial to swap implementations for testing.
 Future<void> initDependencies() async {
+  // ── Supabase Auth (Auto-SignIn for testing) ──────────────────
+  try {
+    await Supabase.instance.client.auth.signInAnonymously();
+  } on AuthException catch (e) {
+    // This allows the app to continue running even if anonymous sign-ins are disabled
+    print('Notice: Supabase anonymous sign-in failed: ${e.message}');
+  } catch (e) {
+    print('Notice: Supabase anonymous sign-in failed: $e');
+  }
+
   // ── External ────────────────────────────────────────────────
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
@@ -73,6 +89,15 @@ Future<void> initDependencies() async {
     ),
   );
 
+  sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
+
+  sl.registerLazySingleton<SupabaseDatasource>(
+    () => SupabaseDatasourceImpl(
+      supabase: sl(),
+      logger: sl(),
+    ),
+  );
+
   sl.registerLazySingleton<PlayerLocalDatasource>(
     () => PlayerLocalDatasourceImpl(
       sharedPreferences: sl(),
@@ -97,6 +122,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<AiRepository>(
     () => AiRepositoryImpl(
       datasource: sl(),
+      supabaseDatasource: sl(),
       logger: sl(),
       alertDispatcher: sl(),
     ),
@@ -105,6 +131,8 @@ Future<void> initDependencies() async {
   // ── Use Cases ───────────────────────────────────────────────
   sl.registerLazySingleton(() => GetPlayerProfile(repository: sl()));
   sl.registerLazySingleton(() => GetAiStrategy(repository: sl()));
+  sl.registerLazySingleton(() => SaveAiStrategy(repository: sl()));
+  sl.registerLazySingleton(() => GetSavedStrategies(repository: sl()));
 
   // ── Cubits (factory = new instance per widget tree) ─────────
   sl.registerFactory(() => PlayerCubit(
@@ -114,6 +142,12 @@ Future<void> initDependencies() async {
 
   sl.registerFactory(() => AiStrategyCubit(
         getAiStrategy: sl(),
+        saveAiStrategy: sl(),
+        logger: sl(),
+      ));
+
+  sl.registerFactory(() => SavedStrategiesCubit(
+        getSavedStrategies: sl(),
         logger: sl(),
       ));
 }

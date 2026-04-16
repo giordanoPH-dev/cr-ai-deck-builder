@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/di/injection_container.dart';
 import 'presentation/blocs/player/player_cubit.dart';
 import 'presentation/blocs/ai_strategy/ai_strategy_cubit.dart';
+import 'presentation/blocs/ai_strategy/saved_strategies_cubit.dart';
 import 'presentation/screens/search_screen.dart';
 
 /// Root application widget.
@@ -21,6 +22,7 @@ class App extends StatelessWidget {
       providers: [
         BlocProvider<PlayerCubit>(create: (_) => sl()),
         BlocProvider<AiStrategyCubit>(create: (_) => sl()),
+        BlocProvider<SavedStrategiesCubit>(create: (_) => sl()),
       ],
       child: MaterialApp(
         title: 'CR AI Deck Builder',

@@ -5,7 +5,7 @@
 <h1 align="center">CR AI Deck Builder</h1>
 
 <p align="center">
-  <strong>Flutter • Clean Architecture • Gemini AI</strong>
+  <strong>Flutter • Clean Architecture • Gemini AI • Production-Grade Resilience</strong>
 </p>
 
 <p align="center">
@@ -22,7 +22,7 @@
 
 Aplicativo Flutter que consome a **API oficial do Clash Royale** e utiliza **Google Gemini AI** para gerar relatórios estratégicos personalizados com sugestão de decks, coaching de meta-game e guias de batalha — tudo com base na coleção real do jogador.
 
-O projeto foi arquitetado com foco em **resiliência**: interações rápidas (< 2 min), fallback offline via cache local, retry automático com backoff exponencial, e observabilidade estruturada pronta para integração com pipelines de monitoramento em produção.
+O projeto foi arquitetado com foco em **resiliência de produção**: interações rápidas (< 2 min), fallback offline via cache local, retry automático com backoff exponencial, e observabilidade estruturada pronta para integração com pipelines de monitoramento em produção.
 
 > ⚠️ *This material is unofficial and is not endorsed by Supercell.*
 
@@ -83,6 +83,12 @@ graph TB
 | **Use Cases** | `GetPlayerProfile` orquestra busca paralela de perfil + batalhas. `GetAiStrategy` valida regras de negócio antes de chamar a LLM. |
 | **Repository Pattern** | Abstração que decide transparentemente se busca dados da API ou do cache local (offline-first). |
 
+### Benefícios Práticos da Arquitetura
+
+1. **Trocar data sources sem risco** — Se migrar de Clash Royale API para um backend próprio, basta criar um novo `Datasource` e registrar no DI. Nenhum use case ou Cubit muda.
+2. **Adicionar features isoladamente** — Uma nova tela de "Ranking" seria: nova entidade + novo use case + novo Cubit + nova screen. Zero acoplamento com o fluxo existente.
+3. **Testar unitariamente cada camada** — Mockar repositories para testar use cases. Mockar use cases para testar Cubits.
+
 ---
 
 ## 🔄 Gerenciamento de Estado
@@ -101,7 +107,7 @@ O uso de `sealed class` + `switch expressions` garante **exhaustive matching** n
 
 ---
 
-## 🛡️ Resiliência
+## 🛡️ Resiliência (Production-Grade)
 
 ### Cenários de Falha Tratados
 

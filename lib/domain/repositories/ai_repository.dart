@@ -15,4 +15,13 @@ abstract class AiRepository {
     required List<CrBattle> battles,
     required String preferredArchetype,
   });
+
+  /// Saves a generated strategy to the cloud (Supabase).
+  Future<Either<Failure, void>> saveStrategy({
+    required AiStrategyReport report,
+    required String playerTag,
+  });
+
+  /// Fetches saved strategies for a player.
+  Future<Either<Failure, List<AiStrategyReport>>> getSavedStrategies(String playerTag);
 }
