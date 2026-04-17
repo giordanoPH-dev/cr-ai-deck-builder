@@ -1,21 +1,24 @@
 import '../../domain/entities/battle.dart';
 import 'card_model.dart';
 
-/// Data model for [BattleParticipant] with JSON serialization.
 class BattleParticipantModel extends BattleParticipant {
   const BattleParticipantModel({
     required super.tag,
     required super.name,
     required super.crowns,
+    super.startingTrophies,
+    super.trophyChange,
     super.cards = const [],
   });
 
   factory BattleParticipantModel.fromJson(Map<String, dynamic> json) {
     final cardsList = json['cards'] as List? ?? [];
     return BattleParticipantModel(
-      tag: json['tag'] as String,
-      name: json['name'] as String,
-      crowns: json['crowns'] as int,
+      tag: json['tag'] as String? ?? '',
+      name: json['name'] as String? ?? 'Unknown',
+      crowns: json['crowns'] as int? ?? 0,
+      startingTrophies: json['startingTrophies'] as int?,
+      trophyChange: json['trophyChange'] as int?,
       cards: cardsList.map((e) => CrCardModel.fromJson(e as Map<String, dynamic>)).toList(),
     );
   }
@@ -23,9 +26,11 @@ class BattleParticipantModel extends BattleParticipant {
   factory BattleParticipantModel.fromCacheJson(Map<String, dynamic> json) {
     final cardsList = json['cards'] as List? ?? [];
     return BattleParticipantModel(
-      tag: json['tag'] as String,
-      name: json['name'] as String,
-      crowns: json['crowns'] as int,
+      tag: json['tag'] as String? ?? '',
+      name: json['name'] as String? ?? 'Unknown',
+      crowns: json['crowns'] as int? ?? 0,
+      startingTrophies: json['startingTrophies'] as int?,
+      trophyChange: json['trophyChange'] as int?,
       cards: cardsList.map((e) => CrCardModel.fromCacheJson(e as Map<String, dynamic>)).toList(),
     );
   }
@@ -35,12 +40,13 @@ class BattleParticipantModel extends BattleParticipant {
       'tag': tag,
       'name': name,
       'crowns': crowns,
+      'startingTrophies': startingTrophies,
+      'trophyChange': trophyChange,
       'cards': cards.map((c) => (c as CrCardModel).toJson()).toList(),
     };
   }
 }
 
-/// Data model for [CrBattle] with JSON serialization.
 class CrBattleModel extends CrBattle {
   const CrBattleModel({
     required super.type,
