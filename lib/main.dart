@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 import 'app.dart';
 import 'core/di/injection_container.dart';
@@ -9,7 +9,8 @@ import 'core/observability/logger_service.dart';
 import 'services/ad_service.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await dotenv.load(fileName: ".env");
   
   // Initialize Supabase
@@ -36,5 +37,6 @@ Future<void> main() async {
     }
   }
 
+  FlutterNativeSplash.remove();
   runApp(const App());
 }

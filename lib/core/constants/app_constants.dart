@@ -17,12 +17,18 @@ class AppConstants {
 
   // ── LLM ──────────────────────────────────────────────────
   static const String geminiModel = 'gemini-2.5-flash-lite';
+  static const List<String> geminiModelFallbacks = [
+    'gemini-2.5-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash-lite',
+  ];
   static const int maxBattlesForAnalysis = 15;
 
   // ── Cache ────────────────────────────────────────────────
   static const String cachedProfileKey = 'cached_player_profile';
   static const String cachedBattleLogKey = 'cached_battle_log';
   static const String savedPlayerTagKey = 'saved_player_tag';
+  static const String userGeminiApiKeyKey = 'user_gemini_api_key';
 
   // ── Observability ────────────────────────────────────────
   static const String appIdentifier = 'cr-ai-deck-builder';

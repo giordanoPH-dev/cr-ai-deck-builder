@@ -1,0 +1,105 @@
+{
+  "@@locale": "es",
+
+  "appTitle": "ROYALE COACH",
+  "somethingWentWrong": "Algo salió mal",
+  "restartApp": "Reinicia la aplicación.",
+
+  "unofficialApp": "APP FAN NO OFICIAL",
+  "aiPoweredTagline": "ESTRATEGIA E INSIGHTS CON IA",
+  "playerTagLabel": "ETIQUETA DEL JUGADOR",
+  "playerTagHint": "ej: L8P22UR2",
+  "analyzeButton": "ANALIZAR PERFIL",
+  "whereIsMyTag": "¿Dónde está mi Tag?",
+  "step1": "Abre Clash Royale",
+  "step2": "Toca tu Nombre (Arriba a la izquierda)",
+  "step3": "Copia la Tag debajo de tu Nombre",
+  "tagExample": "Ejemplo: #L8P22UR2",
+  "disclaimerText": "Este material no es oficial y no está respaldado por Supercell. Para más información consulta la Política de Contenido de Fan de Supercell: www.supercell.com/fan-content-policy.",
+  "poweredByGemini": "Desarrollado con Gemini AI",
+
+  "profileTitle": "PERFIL",
+  "cacheTooltip": "Datos en caché (sin conexión)",
+  "offlineBadge": "SIN CONEXIÓN",
+  "aiInsightsTitle": "ANÁLISIS ESTRATÉGICO IA",
+  "analyzingText": "Analizando con Gemini AI...",
+  "chooseStrategy": "Elige tu estrategia de batalla:",
+  "unlockAnalysis": "Desbloquea el análisis experto de tu colección.",
+  "watchAdButton": "VER ANUNCIO",
+
+  "tabDeck": "DECK",
+  "tabCards": "CARTAS",
+  "tabBattles": "BATALLAS",
+  "tabStats": "ESTADÍSTICAS",
+
+  "trophiesLabel": "TROFEOS",
+  "bestRecordLabel": "RÉCORD",
+  "levelLabel": "NIVEL",
+
+  "yourDeck": "TU DECK",
+  "opponentDeck": "DECK DEL OPONENTE",
+  "importButton": "IMPORTAR EN CLASH ROYALE",
+
+  "victory": "VICTORIA",
+  "defeat": "DERROTA",
+  "draw": "EMPATE",
+
+  "noBattlesFound": "No se encontraron batallas",
+  "cardsNotFound": "Cartas no encontradas",
+  "deckNotFound": "Deck no encontrado",
+  "noCards": "Sin cartas",
+
+  "commonDecks": "DECKS MÁS COMUNES",
+  "arenaStrategies": "ESTRATEGIAS DE ESTA ARENA",
+  "winTips": "CONSEJOS PARA GANAR",
+  "arenaGuideNotFound": "Guía no encontrada para {arena}",
+  "@arenaGuideNotFound": {
+    "placeholders": {
+      "arena": { "type": "String" }
+    }
+  },
+
+  "playstyleAnalysisTitle": "ANÁLISIS DE ESTILO",
+  "metaCoachingTitle": "COACHING DE META",
+  "suggestedDeckTitle": "DECK SUGERIDO",
+  "battleGuideTitle": "GUÍA DE BATALLA",
+  "opening": "⚔️ Apertura",
+  "defense": "🛡️ Defensa",
+  "winConditionLabel": "🏆 Victoria",
+  "importDeckButton": "IMPORTAR DECK EN CLASH ROYALE",
+  "reAnalyze": "RE-ANALIZAR",
+  "confidence": "Confianza: {pct}%",
+  "@confidence": {
+    "placeholders": {
+      "pct": { "type": "int" }
+    }
+  },
+  "cardLevelInfo": "Nivel {level} / {maxLevel}",
+  "@cardLevelInfo": {
+    "placeholders": {
+      "level": { "type": "String" },
+      "maxLevel": { "type": "String" }
+    }
+  },
+
+  "archetypeExplanationTitle": "GUÍA DE ARQUETIPO",
+  "deckBreakdownTitle": "COMPOSICIÓN DEL DECK",
+  "roleWinCondition": "Win Condition",
+  "roleSpells": "Hechizos",
+  "roleAirDefense": "Defensa Aérea",
+  "roleSupport": "Soporte",
+  "roleBuildings": "Edificios",
+  "elixirManagementTitle": "⚡ Elixir",
+  "doubleElixirTitle": "⚡⚡ Doble Elixir",
+  "commonMistakesTitle": "⚠️ Errores Comunes",
+  "matchupTipsTitle": "GUÍA DE MATCHUPS",
+  "vsLabel": "vs",
+
+  "archetypeBeatdown": "Fuerza Bruta",
+  "archetypeControl": "Control",
+  "archetypeCycle": "Ciclo",
+  "archetypeSiege": "Asedio",
+  "archetypeBait": "Cebo",
+  "chooseArchetypeLabel": "Elige tu estrategia:",
+  "currentArenaLabel": "Arena actual"
+}

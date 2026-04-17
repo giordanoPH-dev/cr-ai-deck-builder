@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../constants/app_constants.dart';
 import '../../data/datasources/ai_datasource.dart';
 import '../../data/datasources/clash_api_datasource.dart';
 import '../../data/datasources/player_local_datasource.dart';
@@ -14,6 +15,7 @@ import '../../data/repositories/player_repository_impl.dart';
 import '../../domain/repositories/ai_repository.dart';
 import '../../domain/repositories/player_repository.dart';
 import '../../domain/usecases/get_ai_strategy.dart';
+import '../../domain/usecases/get_full_analysis.dart';
 import '../../domain/usecases/get_player_profile.dart';
 import '../../domain/usecases/save_ai_strategy.dart';
 import '../../domain/usecases/get_saved_strategies.dart';
@@ -30,17 +32,12 @@ final GetIt sl = GetIt.instance;
 
 /// Initializes all dependencies using the Service Locator pattern.
 ///
-/// Registration order follows the dependency graph:
-/// External → Core → Data Sources → Repositories → Use Cases → Cubits
-///
-/// All business dependencies are registered against their abstractions,
-/// making it trivial to swap implementations for testing.
+/// Registration order: External → Core → DataSources → Repositories → UseCases → Cubits
 Future<void> initDependencies() async {
-  // ── Supabase Auth (Auto-SignIn for testing) ──────────────────
+  // ── Supabase Auth ────────────────────────────────────────────
   try {
     await Supabase.instance.client.auth.signInAnonymously();
   } on AuthException catch (e) {
-    // This allows the app to continue running even if anonymous sign-ins are disabled
     print('Notice: Supabase anonymous sign-in failed: ${e.message}');
   } catch (e) {
     print('Notice: Supabase anonymous sign-in failed: $e');
@@ -72,7 +69,8 @@ Future<void> initDependencies() async {
 
   // ── Data Sources ────────────────────────────────────────────
   final clashApiKey = dotenv.env['CLASH_ROYALE_API_KEY'] ?? '';
-  final geminiApiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+  final userGeminiKey = sharedPreferences.getString(AppConstants.userGeminiApiKeyKey) ?? '';
+  final geminiApiKey = userGeminiKey.isNotEmpty ? userGeminiKey : (dotenv.env['GEMINI_API_KEY'] ?? '');
 
   sl.registerLazySingleton<ClashApiDatasource>(
     () => ClashApiDatasourceImpl(
@@ -105,7 +103,7 @@ Future<void> initDependencies() async {
     ),
   );
 
-  // ── Services (non-business) ────────────────────────────────
+  // ── Services ────────────────────────────────────────────────
   sl.registerLazySingleton<AdService>(() => AdService());
 
   // ── Repositories ────────────────────────────────────────────
@@ -125,12 +123,14 @@ Future<void> initDependencies() async {
       supabaseDatasource: sl(),
       logger: sl(),
       alertDispatcher: sl(),
+      sharedPreferences: sl(),
     ),
   );
 
   // ── Use Cases ───────────────────────────────────────────────
   sl.registerLazySingleton(() => GetPlayerProfile(repository: sl()));
   sl.registerLazySingleton(() => GetAiStrategy(repository: sl()));
+  sl.registerLazySingleton(() => GetFullAnalysis(repository: sl()));
   sl.registerLazySingleton(() => SaveAiStrategy(repository: sl()));
   sl.registerLazySingleton(() => GetSavedStrategies(repository: sl()));
 
@@ -142,7 +142,8 @@ Future<void> initDependencies() async {
 
   sl.registerFactory(() => AiStrategyCubit(
         getAiStrategy: sl(),
-        saveAiStrategy: sl(),
+        getFullAnalysis: sl(),
+        aiRepository: sl(),
         logger: sl(),
       ));
 

@@ -1,0 +1,105 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "ROYALE COACH",
+  "somethingWentWrong": "Something went wrong",
+  "restartApp": "Restart the application.",
+
+  "unofficialApp": "UNOFFICIAL FAN APP",
+  "aiPoweredTagline": "AI-POWERED STRATEGY & INSIGHTS",
+  "playerTagLabel": "PLAYER TAG",
+  "playerTagHint": "eg: L8P22UR2",
+  "analyzeButton": "ANALYZE PROFILE",
+  "whereIsMyTag": "Where is my Tag?",
+  "step1": "Open Clash Royale",
+  "step2": "Tap your Name (Top Left)",
+  "step3": "Copy the Tag under your Name",
+  "tagExample": "Example: #L8P22UR2",
+  "disclaimerText": "This material is unofficial and is not endorsed by Supercell. For more information see Supercell's Fan Content Policy: www.supercell.com/fan-content-policy.",
+  "poweredByGemini": "Powered by Gemini AI",
+
+  "profileTitle": "PROFILE",
+  "cacheTooltip": "Cached data (offline)",
+  "offlineBadge": "OFFLINE",
+  "aiInsightsTitle": "AI STRATEGY INSIGHTS",
+  "analyzingText": "Analyzing with Gemini AI...",
+  "chooseStrategy": "Choose your battle strategy:",
+  "unlockAnalysis": "Unlock expert analysis of your collection.",
+  "watchAdButton": "WATCH AD TO UNLOCK",
+
+  "tabDeck": "DECK",
+  "tabCards": "CARDS",
+  "tabBattles": "BATTLES",
+  "tabStats": "STATS",
+
+  "trophiesLabel": "TROPHIES",
+  "bestRecordLabel": "BEST",
+  "levelLabel": "LEVEL",
+
+  "yourDeck": "YOUR DECK",
+  "opponentDeck": "OPPONENT DECK",
+  "importButton": "IMPORT IN CLASH ROYALE",
+
+  "victory": "VICTORY",
+  "defeat": "DEFEAT",
+  "draw": "DRAW",
+
+  "noBattlesFound": "No battles found",
+  "cardsNotFound": "Cards not found",
+  "deckNotFound": "Deck not found",
+  "noCards": "No cards",
+
+  "commonDecks": "MOST COMMON DECKS",
+  "arenaStrategies": "ARENA STRATEGIES",
+  "winTips": "WIN TIPS",
+  "arenaGuideNotFound": "Guide not found for {arena}",
+  "@arenaGuideNotFound": {
+    "placeholders": {
+      "arena": { "type": "String" }
+    }
+  },
+
+  "playstyleAnalysisTitle": "PLAYSTYLE ANALYSIS",
+  "metaCoachingTitle": "META COACHING",
+  "suggestedDeckTitle": "SUGGESTED DECK",
+  "battleGuideTitle": "BATTLE GUIDE",
+  "opening": "⚔️ Opening",
+  "defense": "🛡️ Defense",
+  "winConditionLabel": "🏆 Win Condition",
+  "importDeckButton": "IMPORT DECK IN CLASH ROYALE",
+  "reAnalyze": "RE-ANALYZE",
+  "confidence": "Confidence: {pct}%",
+  "@confidence": {
+    "placeholders": {
+      "pct": { "type": "int" }
+    }
+  },
+  "cardLevelInfo": "Level {level} / {maxLevel}",
+  "@cardLevelInfo": {
+    "placeholders": {
+      "level": { "type": "String" },
+      "maxLevel": { "type": "String" }
+    }
+  },
+
+  "archetypeExplanationTitle": "ARCHETYPE GUIDE",
+  "deckBreakdownTitle": "DECK BREAKDOWN",
+  "roleWinCondition": "Win Condition",
+  "roleSpells": "Spells",
+  "roleAirDefense": "Air Defense",
+  "roleSupport": "Support",
+  "roleBuildings": "Buildings",
+  "elixirManagementTitle": "⚡ Elixir",
+  "doubleElixirTitle": "⚡⚡ Double Elixir",
+  "commonMistakesTitle": "⚠️ Common Mistakes",
+  "matchupTipsTitle": "MATCHUP GUIDE",
+  "vsLabel": "vs",
+
+  "archetypeBeatdown": "Beatdown",
+  "archetypeControl": "Control",
+  "archetypeCycle": "Cycle",
+  "archetypeSiege": "Siege",
+  "archetypeBait": "Bait",
+  "chooseArchetypeLabel": "Choose your strategy:",
+  "currentArenaLabel": "Current arena"
+}

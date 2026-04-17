@@ -1,9 +1,13 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/foundation.dart';
 
 class AdService {
-  // Google's official test Rewarded Ad ID. Stable and always works.
-  static const String _rewardedAdUnitId = 'ca-app-pub-3940256099942544/5224354917';
+  // Read from .env: ADMOB_REWARDED_AD_UNIT_ID
+  // Falls back to Google's official test ID when not set.
+  static String get _rewardedAdUnitId =>
+      dotenv.maybeGet('ADMOB_REWARDED_AD_UNIT_ID') ??
+      'ca-app-pub-3940256099942544/5224354917';
   
   RewardedAd? _rewardedAd;
   bool _isAdLoaded = false;

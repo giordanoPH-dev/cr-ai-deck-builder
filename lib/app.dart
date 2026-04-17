@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cr_ai_deck_builder/l10n/generated/app_localizations.dart';
 import 'core/di/injection_container.dart';
 import 'presentation/blocs/player/player_cubit.dart';
 import 'presentation/blocs/ai_strategy/ai_strategy_cubit.dart';
-import 'presentation/blocs/ai_strategy/saved_strategies_cubit.dart';
-import 'presentation/screens/search_screen.dart';
+import 'presentation/screens/splash_screen.dart';
 
 /// Root application widget.
 ///
@@ -27,6 +27,8 @@ class App extends StatelessWidget {
       child: MaterialApp(
         title: 'CR AI Deck Builder',
         debugShowCheckedModeBanner: false,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: ThemeData(
           fontFamily: 'Clash',
           colorScheme: ColorScheme.fromSeed(
@@ -81,7 +83,7 @@ class App extends StatelessWidget {
             ],
           );
         },
-        home: const SearchScreen(),
+        home: const SplashScreen(),
       ),
     );
   }
