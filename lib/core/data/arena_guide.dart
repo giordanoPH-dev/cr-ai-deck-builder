@@ -88,6 +88,8 @@ class ArenaGuide {
   }
 
   /// Finds a guide by arena name using case-insensitive partial matching.
+  /// Falls back to the highest-level guide for any unknown arena names so
+  /// the app never shows "arena not found" for new or event arenas.
   static ArenaGuide? findByName(String name) {
     final lower = name.toLowerCase().trim();
     for (final guide in all) {
@@ -97,7 +99,17 @@ class ArenaGuide {
         return guide;
       }
     }
-    return null;
+    // Fallback patterns for event/challenge arenas and future arena names
+    if (lower.contains('mosh pit') || lower.contains('moshpit')) {
+      return all.firstWhere((g) => g.arenaName == 'Ultimate Mosh Pit',
+          orElse: () => all.last);
+    }
+    if (lower.contains('champion') || lower.contains('master') ||
+        lower.contains('legendary') || lower.contains('challenger')) {
+      return all.last;
+    }
+    // Generic fallback: return the highest-level guide
+    return all.last;
   }
 
   static const List<ArenaGuide> all = [
@@ -867,6 +879,35 @@ class ArenaGuide {
       ],
       aiContext:
           'Royal Champion (7.400-7.699 troféus): top 1.000 mundial. Meta ultra-definido. Apenas decks tier-1 com execução impecável sobem consistentemente.',
+    ),
+
+    // ── Ultimate Mosh Pit (evento / arena especial) ──
+    ArenaGuide(
+      arenaName: 'Ultimate Mosh Pit',
+      trophyRange: 'Evento especial / alto nível',
+      overview:
+          'Arena de evento especial do Clash Royale. O meta é dinâmico e pode diferir do ladder padrão. Jogadores de alto nível competem com regras especiais ou formatos alternativos.',
+      commonDecks: [
+        'Hog 2.6 Ciclo',
+        'LavaLoon + Freeze',
+        'Miner + Poison Control',
+        'Bridge Spam PEKKA',
+        'Golem Night Witch',
+      ],
+      strategies: [
+        'Adapte seu deck ao formato do evento — as regras podem mudar o meta drasticamente',
+        'Ciclo rápido tem vantagem em eventos com elixir acelerado',
+        'Decks de controle e feitiços são mais eficientes em tempos de partida reduzidos',
+        'Priorize sinergias sobre nível individual das cartas',
+      ],
+      winTips: [
+        'Leia o formato do evento antes de decidir o deck — cada Mosh Pit tem regras únicas',
+        'Em eventos com elixir dobrado, decks pesados como Golem ficam ainda mais fortes',
+        'Pressão constante nas duas lanes é a estratégia dominante em eventos de alta velocidade',
+        'Feitiços de área (Fireball, Lightning) valem mais em eventos com swarms',
+      ],
+      aiContext:
+          'Ultimate Mosh Pit (evento especial): arena de evento com regras possivelmente diferentes do ladder. Recomendar decks versáteis e bem estabelecidos no meta de alto nível.',
     ),
 
     ArenaGuide(
