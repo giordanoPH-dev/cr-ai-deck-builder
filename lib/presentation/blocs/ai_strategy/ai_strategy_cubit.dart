@@ -105,14 +105,19 @@ class AiStrategyCubit extends Cubit<AiStrategyState> {
       languageName: languageName,
     );
 
-    result.fold(
-      (failure) => emit(AiStrategyError(failure: failure)),
-      (report) {
-        final now = DateTime.now();
-        emit(FullAnalysisLoaded(report: report, savedAt: now, isFromCache: false));
-        _aiRepository.saveAnalysis(playerTag: profile.tag, report: report);
-        _logger.info('AiStrategyCubit: Analysis saved', metadata: {'player': profile.name});
-      },
+    if (result.isLeft()) {
+      result.fold((failure) => emit(AiStrategyError(failure: failure)), (_) {});
+      return;
+    }
+
+    final report = result.getOrElse(() => throw StateError('impossible'));
+    final now = DateTime.now();
+    emit(FullAnalysisLoaded(report: report, savedAt: now, isFromCache: false));
+
+    final saveResult = await _aiRepository.saveAnalysis(playerTag: profile.tag, report: report);
+    saveResult.fold(
+      (failure) => _logger.warn('AiStrategyCubit: Save failed', metadata: {'error': failure.message}),
+      (_) => _logger.info('AiStrategyCubit: Analysis saved', metadata: {'player': profile.name}),
     );
   }
 

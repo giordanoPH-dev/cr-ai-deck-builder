@@ -799,15 +799,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showDeckPopup(BuildContext context, String deckName, {String? deckUrl}) {
+  void _showDeckPopup(
+    BuildContext context,
+    String deckName, {
+    String? deckUrl,
+    List<String>? metaDeckCardNames,
+    Map<String, CrCard>? cardByName,
+  }) {
     final hasRealDeck = deckUrl != null && deckUrl.isNotEmpty;
+    final cards = metaDeckCardNames ?? [];
+    final ownedSet = cardByName?.keys.toSet() ?? {};
 
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF1A237E), Color(0xFF0D47A1)],
@@ -823,22 +831,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.style, color: Colors.amber, size: 36),
-              const SizedBox(height: 12),
+              const Icon(Icons.style, color: Colors.amber, size: 32),
+              const SizedBox(height: 10),
               Text(
                 deckName,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 6),
-              Text(
-                hasRealDeck
-                    ? 'Abre o deck diretamente no Clash Royale'
-                    : 'Você não possui todas as cartas deste deck',
-                style: TextStyle(color: hasRealDeck ? Colors.white38 : Colors.amber.withValues(alpha: 0.7), fontSize: 11),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
+              if (!hasRealDeck) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Cartas que você está faltando',
+                  style: TextStyle(color: Colors.amber.withValues(alpha: 0.8), fontSize: 11),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              if (cards.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  alignment: WrapAlignment.center,
+                  children: cards.map((name) {
+                    final owned = ownedSet.contains(name.toLowerCase());
+                    final card = cardByName?[name.toLowerCase()];
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: owned
+                            ? Colors.green.withValues(alpha: 0.15)
+                            : Colors.red.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: owned
+                              ? Colors.greenAccent.withValues(alpha: 0.5)
+                              : Colors.redAccent.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (card?.iconUrl != null && card!.iconUrl.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 4),
+                              child: Image.network(
+                                card.iconUrl,
+                                width: 20,
+                                height: 20,
+                                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                              ),
+                            ),
+                          Text(
+                            name,
+                            style: TextStyle(
+                              color: owned ? Colors.greenAccent : Colors.redAccent,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            owned ? Icons.check_circle_outline : Icons.cancel_outlined,
+                            size: 12,
+                            color: owned ? Colors.greenAccent : Colors.redAccent,
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+              const SizedBox(height: 16),
               if (hasRealDeck)
                 _Push3DButton(
                   label: 'Abrir no Clash Royale',
@@ -862,20 +925,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 )
               else
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.black26,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                  ),
-                  child: const Text(
-                    'Consiga as cartas deste deck e a importação ficará disponível automaticamente.',
-                    style: TextStyle(color: Colors.white54, fontSize: 11),
-                    textAlign: TextAlign.center,
-                  ),
+                Text(
+                  'Consiga as cartas marcadas em vermelho para importar este deck.',
+                  style: TextStyle(color: Colors.white38, fontSize: 11),
+                  textAlign: TextAlign.center,
                 ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: const Text('Fechar', style: TextStyle(color: Colors.white38, fontSize: 12)),
@@ -1003,14 +1058,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             .entries
                             .map(
                               (e) => GestureDetector(
-                                onTap: () => _showDeckPopup(
-                                  context,
-                                  e.value,
-                                  deckUrl: _resolveDeckUrl(
-                                    ArenaGuide.cardsForDeck(e.value),
-                                    cardByName,
-                                  ),
-                                ),
+                                onTap: () {
+                                  final metaCards = ArenaGuide.cardsForDeck(e.value);
+                                  _showDeckPopup(
+                                    context,
+                                    e.value,
+                                    deckUrl: _resolveDeckUrl(metaCards, cardByName),
+                                    metaDeckCardNames: metaCards,
+                                    cardByName: cardByName,
+                                  );
+                                },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 10,
