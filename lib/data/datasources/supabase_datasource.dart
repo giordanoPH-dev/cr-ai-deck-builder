@@ -78,7 +78,7 @@ class SupabaseDatasourceImpl implements SupabaseDatasource {
 
       final List<dynamic> data = response as List<dynamic>;
       return data
-          .map((e) => AiStrategyReportModel.fromJson(e as Map<String, dynamic>))
+          .map((e) => AiStrategyReportModel.fromParsedJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
       logger.warn('Failed to fetch strategies from Supabase', metadata: {'error': e.toString()});

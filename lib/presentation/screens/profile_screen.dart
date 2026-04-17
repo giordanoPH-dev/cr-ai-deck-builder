@@ -19,10 +19,14 @@ import '../../domain/entities/player.dart';
 import '../../services/ad_service.dart';
 import '../blocs/ai_strategy/ai_strategy_cubit.dart';
 import '../blocs/ai_strategy/ai_strategy_state.dart';
+import '../blocs/ai_strategy/saved_strategies_cubit.dart';
+import '../blocs/ai_strategy/saved_strategies_state.dart';
 import '../blocs/player/player_cubit.dart';
 import '../blocs/player/player_state.dart';
+import '../widgets/banner_ad_widget.dart';
 import '../widgets/battle_stats_dashboard.dart';
 import '../widgets/error_display_widget.dart';
+import '../widgets/strategy_report_card.dart';
 import 'how_to_play_screen.dart';
 import 'search_screen.dart';
 
@@ -796,9 +800,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showDeckPopup(BuildContext context, String deckName, {String? deckUrl}) {
-    // Fallback: open CR deck builder section (no specific deck loaded)
-    const crDeckBuilderUrl = 'https://link.clashroyale.com/deck/en';
-    final targetUrl = (deckUrl != null && deckUrl.isNotEmpty) ? deckUrl : crDeckBuilderUrl;
     final hasRealDeck = deckUrl != null && deckUrl.isNotEmpty;
 
     showDialog(
@@ -833,32 +834,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text(
                 hasRealDeck
                     ? 'Abre o deck diretamente no Clash Royale'
-                    : 'Abre o Clash Royale com o nome copiado',
-                style: const TextStyle(color: Colors.white38, fontSize: 11),
+                    : 'Você não possui todas as cartas deste deck',
+                style: TextStyle(color: hasRealDeck ? Colors.white38 : Colors.amber.withValues(alpha: 0.7), fontSize: 11),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              _Push3DButton(
-                label: 'Abrir no Clash Royale',
-                icon: Icons.open_in_new_rounded,
-                onTap: () async {
-                  Clipboard.setData(ClipboardData(text: deckName));
-                  Navigator.of(ctx).pop();
-                  final uri = Uri.parse(targetUrl);
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  } else {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Clash Royale não encontrado. Nome copiado!'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
+              if (hasRealDeck)
+                _Push3DButton(
+                  label: 'Abrir no Clash Royale',
+                  icon: Icons.open_in_new_rounded,
+                  onTap: () async {
+                    Clipboard.setData(ClipboardData(text: deckName));
+                    Navigator.of(ctx).pop();
+                    final uri = Uri.parse(deckUrl);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Clash Royale não encontrado.'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
                     }
-                  }
-                },
-              ),
+                  },
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.black26,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                  ),
+                  child: const Text(
+                    'Consiga as cartas deste deck e a importação ficará disponível automaticamente.',
+                    style: TextStyle(color: Colors.white54, fontSize: 11),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
@@ -2496,7 +2512,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               builder: (context, scrollController) => SingleChildScrollView(
                                 controller: scrollController,
                                 padding: const EdgeInsets.all(24),
-                                child: StrategyReportCard(report: report),
+                                child: StrategyReportCard(
+                                  report: report,
+                                  playerCards: context.read<PlayerCubit>().state is PlayerLoaded
+                                      ? (context.read<PlayerCubit>().state as PlayerLoaded).profile.cards
+                                      : const [],
+                                ),
                               ),
                             ),
                           );

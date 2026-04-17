@@ -4,6 +4,7 @@ import 'package:cr_ai_deck_builder/l10n/generated/app_localizations.dart';
 import 'core/di/injection_container.dart';
 import 'presentation/blocs/player/player_cubit.dart';
 import 'presentation/blocs/ai_strategy/ai_strategy_cubit.dart';
+import 'presentation/blocs/ai_strategy/saved_strategies_cubit.dart';
 import 'presentation/screens/splash_screen.dart';
 
 /// Root application widget.

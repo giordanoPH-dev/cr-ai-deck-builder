@@ -30,7 +30,7 @@ Clean Architecture with strict layer separation: Presentation → Domain ← Dat
 
 **`lib/data/`** — Implements domain contracts, handles serialization and errors
 - Models extend entities with `fromJson`/`toJson` and `fromParsedJson`
-- Datasources: `ClashApiDatasource` (RoyaleAPI proxy), `AiDatasource` (Gemini), `PlayerLocalDatasource` (SharedPreferences)
+- Datasources: `ClashApiDatasource` (RoyaleAPI proxy), `AiDatasource` (Gemini), `PlayerLocalDatasource` (SharedPreferences), `SupabaseDatasourceImpl` (cloud sync)
 - Repository implementations wrap all errors into `Either<Failure, T>` via `dartz`
 
 **`lib/presentation/`** — Flutter UI only, no business logic
@@ -91,7 +91,7 @@ Runtime config via `flutter_dotenv` (`.env` file, not committed). Required keys:
 - `CLASH_ROYALE_API_KEY` — Clash Royale RoyaleAPI proxy
 - `GEMINI_API_KEY` — Google Gemini (overridable per-user in SharedPreferences via `ApiKeyScreen`)
 - `ADMOB_REWARDED_AD_UNIT_ID` — AdMob rewarded unit ID
-- `SUPABASE_URL` / `SUPABASE_ANON_KEY` — Supabase backend (configured, not yet integrated)
+- `SUPABASE_URL` / `SUPABASE_ANON_KEY` — Supabase backend (anonymous auth + strategy cloud sync)
 
 AdMob App ID is a **build-time** secret: set `admob.app.id` in `android/local.properties` (gitignored); Gradle reads it via `manifestPlaceholders` and injects into `AndroidManifest.xml`. Cannot use `.env` for this.
 
