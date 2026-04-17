@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class GoblinTrophyAnimation extends StatefulWidget {
@@ -8,7 +9,7 @@ class GoblinTrophyAnimation extends StatefulWidget {
   const GoblinTrophyAnimation({
     super.key,
     this.size = 100,
-    this.interval = const Duration(milliseconds: 150),
+    this.interval = const Duration(milliseconds: 90),
   });
 
   @override
@@ -20,13 +21,12 @@ class _GoblinTrophyAnimationState extends State<GoblinTrophyAnimation> {
   Timer? _timer;
 
   final List<String> _images = [
-    'assets/images/animations/goblin_trophy/Item_Goblin_Trophy_01.png',
-    'assets/images/animations/goblin_trophy/Item_Goblin_Trophy_04.png',
+    'assets/images/animations/goblin_trophy/Item_Goblin_Trophy_09.png',
     'assets/images/animations/goblin_trophy/Item_Goblin_Trophy_05.png',
     'assets/images/animations/goblin_trophy/Item_Goblin_Trophy_06.png',
     'assets/images/animations/goblin_trophy/Item_Goblin_Trophy_07.png',
     'assets/images/animations/goblin_trophy/Item_Goblin_Trophy_08.png',
-    'assets/images/animations/goblin_trophy/Item_Goblin_Trophy_09.png',
+    'assets/images/animations/goblin_trophy/Item_Goblin_Trophy_04.png',
   ];
 
   @override

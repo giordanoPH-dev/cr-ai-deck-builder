@@ -1,8 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/entities/player.dart';
 import '../../../domain/entities/battle.dart';
-import '../../../domain/entities/ai_strategy_report.dart';
+import '../../../domain/repositories/ai_repository.dart';
 import '../../../domain/usecases/get_ai_strategy.dart';
+import '../../../domain/usecases/get_full_analysis.dart';
 import '../../../core/observability/logger_service.dart';
 import 'ai_strategy_state.dart';
 
@@ -15,83 +16,124 @@ import '../../../domain/usecases/save_ai_strategy.dart';
 // ... class AiStrategyCubit ...
 class AiStrategyCubit extends Cubit<AiStrategyState> {
   final GetAiStrategy _getAiStrategy;
-  final SaveAiStrategy _saveAiStrategy;
+  final GetFullAnalysis _getFullAnalysis;
+  final AiRepository _aiRepository;
   final LoggerService _logger;
-
-  String _selectedArchetype = 'Aggressive (Beatdown)';
-  String get selectedArchetype => _selectedArchetype;
 
   AiStrategyCubit({
     required GetAiStrategy getAiStrategy,
-    required SaveAiStrategy saveAiStrategy,
+    required GetFullAnalysis getFullAnalysis,
+    required AiRepository aiRepository,
     required LoggerService logger,
   })  : _getAiStrategy = getAiStrategy,
-        _saveAiStrategy = saveAiStrategy,
+        _getFullAnalysis = getFullAnalysis,
+        _aiRepository = aiRepository,
         _logger = logger,
         super(const AiStrategyInitial());
-
-  /// Saves the current report to the cloud.
-  Future<void> saveStrategy({
-    required AiStrategyReport report,
-    required String playerTag,
-  }) async {
-    _logger.info('AiStrategyCubit: Saving strategy', metadata: {'tag': playerTag});
-    
-    final result = await _saveAiStrategy(
-      report: report,
-      playerTag: playerTag,
-    );
-
-    result.fold(
-      (failure) => _logger.warn('AiStrategyCubit: Save failed', metadata: {'error': failure.message}),
-      (_) => _logger.info('AiStrategyCubit: Save successful'),
-    );
-  }
-
-  /// Updates the preferred archetype.
-  void setArchetype(String archetype) {
-    _selectedArchetype = archetype;
-    if (state is AiStrategyInitial) {
-      emit(AiStrategyInitial(archetype: archetype));
-    }
-  }
 
   /// Generates AI strategy for the given player data.
   Future<void> generateStrategy({
     required PlayerProfile profile,
     required List<CrBattle> battles,
+    required String preferredArchetype,
+    String languageName = 'English',
   }) async {
     emit(const AiStrategyLoading());
     _logger.info('AiStrategyCubit: Generating strategy', metadata: {
       'player': profile.name,
-      'archetype': _selectedArchetype,
+      'archetype': preferredArchetype,
+      'language': languageName,
     });
 
     final result = await _getAiStrategy(
       profile: profile,
       battles: battles,
-      preferredArchetype: _selectedArchetype,
+      preferredArchetype: preferredArchetype,
+      languageName: languageName,
     );
 
     result.fold(
       (failure) {
-        _logger.warn('AiStrategyCubit: Generation failed', metadata: {
-          'failure': failure.message,
-        });
+        _logger.warn('AiStrategyCubit: Generation failed', metadata: {'failure': failure.message});
         emit(AiStrategyError(failure: failure));
       },
       (report) {
         _logger.info('AiStrategyCubit: Strategy generated', metadata: {
           'confidence': report.confidenceScore,
-          'deck_cards': report.suggestedDeckNames.length,
         });
         emit(AiStrategyLoaded(report: report));
       },
     );
   }
 
-  /// Resets state to initial.
-  void reset() {
+  Future<void> analyzeDeck({
+    required PlayerProfile profile,
+    required List<CrBattle> battles,
+    String languageName = 'English',
+  }) async {
+    emit(const DeckAnalysisLoading());
+    _logger.info('AiStrategyCubit: Analyzing current deck', metadata: {'player': profile.name});
+
+    final result = await _aiRepository.analyzeDeck(
+      profile: profile,
+      battles: battles,
+      languageName: languageName,
+    );
+
+    result.fold(
+      (failure) => emit(AiStrategyError(failure: failure)),
+      (report) => emit(DeckAnalysisLoaded(report: report)),
+    );
+  }
+
+  Future<void> runFullAnalysis({
+    required PlayerProfile profile,
+    required List<CrBattle> battles,
+    required String preferredArchetype,
+    String languageName = 'English',
+  }) async {
+    emit(const FullAnalysisLoading());
+    _logger.info('AiStrategyCubit: Running full analysis', metadata: {
+      'player': profile.name,
+      'archetype': preferredArchetype,
+    });
+
+    final result = await _getFullAnalysis(
+      profile: profile,
+      battles: battles,
+      preferredArchetype: preferredArchetype,
+      languageName: languageName,
+    );
+
+    result.fold(
+      (failure) => emit(AiStrategyError(failure: failure)),
+      (report) {
+        final now = DateTime.now();
+        emit(FullAnalysisLoaded(report: report, savedAt: now, isFromCache: false));
+        _aiRepository.saveAnalysis(playerTag: profile.tag, report: report);
+        _logger.info('AiStrategyCubit: Analysis saved', metadata: {'player': profile.name});
+      },
+    );
+  }
+
+  Future<void> loadSavedAnalysis(String playerTag) async {
+    final result = await _aiRepository.loadSavedAnalysis(playerTag: playerTag);
+    result.fold(
+      (_) {},
+      (data) {
+        if (data != null) {
+          final (report, savedAt) = data;
+          emit(FullAnalysisLoaded(report: report, savedAt: savedAt, isFromCache: true));
+          _logger.info('AiStrategyCubit: Saved analysis restored', metadata: {'player': playerTag});
+        }
+      },
+    );
+  }
+
+  Future<void> clearSavedAnalysis(String playerTag) async {
+    await _aiRepository.clearSavedAnalysis(playerTag: playerTag);
     emit(const AiStrategyInitial());
   }
+
+  void reset() => emit(const AiStrategyInitial());
 }

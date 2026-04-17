@@ -1,3 +1,4 @@
+import 'package:cr_ai_deck_builder/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,7 +9,7 @@ import '../blocs/player/player_cubit.dart';
 import '../blocs/player/player_state.dart';
 import '../widgets/error_display_widget.dart';
 import '../widgets/goblin_trophy_animation.dart';
-import '../widgets/banner_ad_widget.dart';
+import 'api_key_screen.dart';
 import 'profile_screen.dart';
 
 /// Search screen — entry point of the application.
@@ -65,6 +66,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: BlocListener<PlayerCubit, PlayerState>(
@@ -77,157 +79,202 @@ class _SearchScreenState extends State<SearchScreen> {
           }
         },
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Animated Goblin Trophy
-                  const GoblinTrophyAnimation(size: 150),
-                  const SizedBox(height: 32),
-                  const Text(
-                    'CR AI DECK BUILDER',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2.0,
+          child: Stack(
+            children: [
+              // Settings icon — top left corner
+              Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.settings_outlined,
+                      color: Colors.white38,
+                      size: 22,
+                    ),
+                    tooltip: 'Configurar API Key',
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ApiKeyScreen()),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'UNOFFICIAL FAN APP',
-                    style: TextStyle(
-                      color: Colors.amber,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
+                ),
+              ),
+              // Developer logo — top right corner
+              Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 8, 16, 0),
+                  child: Image.asset(
+                    'assets/images/ui_icons/bitmagedev_logo.png',
+                    width: 80,
+                    fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'AI-POWERED STRATEGY & INSIGHTS',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 12,
-                      letterSpacing: 1.5,
-                      fontWeight: FontWeight.w300,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-
-                  // Search Card
-                  Card(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          TextField(
-                            controller: _tagController,
-                            focusNode: _focusNode,
-                            style: const TextStyle(color: Colors.white, fontSize: 18),
-                            decoration: InputDecoration(
-                              labelText: 'PLAYER TAG',
-                              labelStyle: const TextStyle(color: Colors.amber),
-                              hintText: 'ex: L8P22UR2',
-                              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
-                              prefixIcon: const Icon(Icons.tag, color: Colors.amber),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(color: Colors.amber),
-                              ),
-                              filled: true,
-                              fillColor: Colors.black.withValues(alpha: 0.2),
-                            ),
-                            onSubmitted: (_) => _searchPlayer(),
-                          ),
-                          const SizedBox(height: 24),
-                          BlocBuilder<PlayerCubit, PlayerState>(
-                            builder: (context, state) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  if (state is PlayerError)
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 16),
-                                      child: InlineErrorWidget(
-                                        failure: state.failure,
-                                        onRetry: _searchPlayer,
-                                      ),
-                                    ),
-
-                                  ElevatedButton(
-                                    onPressed: state is PlayerLoading ? null : _searchPlayer,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.amber,
-                                      foregroundColor: Colors.black87,
-                                      padding: const EdgeInsets.symmetric(vertical: 18),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      elevation: 4,
-                                    ),
-                                    child: state is PlayerLoading
-                                        ? const SizedBox(
-                                            height: 20,
-                                            width: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.black87),
-                                            ),
-                                          )
-                                        : const Text(
-                                            'ANALYZE PROFILE',
-                                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                          ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ],
+                ),
+              ),
+              Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Animated Goblin Trophy
+                      const GoblinTrophyAnimation(size: 150),
+                      const SizedBox(height: 32),
+                      Text(
+                        l10n.appTitle,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2.0,
+                        ),
                       ),
-                    ),
-                  ),
-
-                  // Help Section
-                  Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                    child: ExpansionTile(
-                      leading: const Icon(Icons.help_outline, color: Colors.amber, size: 20),
-                      title: const Text(
-                        'Where is my Tag?',
-                        style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.unofficialApp,
+                        style: const TextStyle(
+                          color: Colors.amber,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
                       ),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.aiPoweredTagline,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 12,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.w300,
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+
+                      // Search Card
+                      Card(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _buildStep(1, 'Open Clash Royale'),
-                              _buildStep(2, 'Tap your Name (Top Left)'),
-                              _buildStep(3, 'Copy the Tag under your Name'),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Example: #L8P22UR2',
-                                style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold),
+                              TextField(
+                                controller: _tagController,
+                                focusNode: _focusNode,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: l10n.playerTagLabel,
+                                  labelStyle: const TextStyle(
+                                    color: Colors.amber,
+                                  ),
+                                  hintText: l10n.playerTagHint,
+                                  hintStyle: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                  ),
+                                  prefixIcon: const Icon(
+                                    Icons.tag,
+                                    color: Colors.amber,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: const BorderSide(
+                                      color: Colors.amber,
+                                    ),
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.black.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                ),
+                                onSubmitted: (_) => _searchPlayer(),
+                              ),
+                              const SizedBox(height: 24),
+                              BlocBuilder<PlayerCubit, PlayerState>(
+                                builder: (context, state) {
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      if (state is PlayerError)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 16,
+                                          ),
+                                          child: InlineErrorWidget(
+                                            failure: state.failure,
+                                            onRetry: _searchPlayer,
+                                          ),
+                                        ),
+
+                                      ElevatedButton(
+                                        onPressed: state is PlayerLoading
+                                            ? null
+                                            : _searchPlayer,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.amber,
+                                          foregroundColor: Colors.black87,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 18,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                          ),
+                                          elevation: 4,
+                                        ),
+                                        child: state is PlayerLoading
+                                            ? const SizedBox(
+                                                height: 20,
+                                                width: 20,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                        Color
+                                                      >(Colors.black87),
+                                                ),
+                                              )
+                                            : Text(
+                                                l10n.analyzeButton,
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                      ),
+                                    ],
+                                  );
+                                },
                               ),
                               const SizedBox(height: 16),
                               ElevatedButton.icon(
@@ -256,35 +303,81 @@ class _SearchScreenState extends State<SearchScreen> {
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Disclaimer Footer
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'This material is unofficial and is not endorsed by Supercell. For more information see Supercell\'s Fan Content Policy: www.supercell.com/fan-content-policy.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 9,
-                        height: 1.4,
                       ),
-                    ),
+
+                      // Help Section
+                      Theme(
+                        data: Theme.of(
+                          context,
+                        ).copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          leading: const Icon(
+                            Icons.help_outline,
+                            color: Colors.amber,
+                            size: 20,
+                          ),
+                          title: Text(
+                            l10n.whereIsMyTag,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              child: Column(
+                                children: [
+                                  _buildStep(1, l10n.step1),
+                                  _buildStep(2, l10n.step2),
+                                  _buildStep(3, l10n.step3),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    l10n.tagExample,
+                                    style: const TextStyle(
+                                      color: Colors.amber,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Disclaimer Footer
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          l10n.disclaimerText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 9,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.poweredByGemini,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Powered by Gemini AI',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.4),
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -303,7 +396,11 @@ class _SearchScreenState extends State<SearchScreen> {
             backgroundColor: Colors.amber,
             child: Text(
               number.toString(),
-              style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black87),
+              style: const TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
           ),
           const SizedBox(width: 8),
