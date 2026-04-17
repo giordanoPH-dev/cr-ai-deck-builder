@@ -1,13 +1,13 @@
 import 'package:equatable/equatable.dart';
 
-/// Pure domain entity representing a Clash Royale card.
-/// No serialization logic — that belongs in the data layer.
 class CrCard extends Equatable {
   final int id;
   final String name;
   final int? level;
   final int? maxLevel;
   final String iconUrl;
+  final int? elixirCost;
+  final String? rarity;
 
   const CrCard({
     required this.id,
@@ -15,8 +15,10 @@ class CrCard extends Equatable {
     this.level,
     this.maxLevel,
     required this.iconUrl,
+    this.elixirCost,
+    this.rarity,
   });
 
   @override
-  List<Object?> get props => [id, name, level, maxLevel, iconUrl];
+  List<Object?> get props => [id, name, level, maxLevel, iconUrl, elixirCost, rarity];
 }

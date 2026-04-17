@@ -1,34 +1,18 @@
 import 'package:equatable/equatable.dart';
 
-/// Typed domain entity for the AI strategy report.
-///
-/// Instead of returning raw markdown text from the LLM, we parse
-/// the response into structured, typed fields. This enables:
-/// - Type-safe UI rendering (each section has its own widget)
-/// - Validation of LLM output (detect hallucinations)
-/// - Deep-link generation from card IDs
 class AiStrategyReport extends Equatable {
-  /// Analysis of the player's current playstyle.
   final String playstyleAnalysis;
-
-  /// Coaching advice for the player's trophy range/meta.
   final String metaCoaching;
-
-  /// IDs of the 8 suggested cards for the deck.
   final List<int> suggestedDeckIds;
-
-  /// Names of the 8 suggested cards.
   final List<String> suggestedDeckNames;
-
-  /// Battle guide with opening, defense, and win condition strategies.
   final BattleGuide battleGuide;
-
-  /// Pre-built deep link URL for importing the deck into Clash Royale.
   final String deckLinkUrl;
-
-  /// Confidence score from 0.0 to 1.0 indicating how confident
-  /// the LLM is in its suggestion.
   final double confidenceScore;
+
+  // Extended fields — nullable for backward compatibility
+  final String? archetypeExplanation;
+  final DeckBreakdown? deckBreakdown;
+  final List<MatchupTip>? matchupTips;
 
   const AiStrategyReport({
     required this.playstyleAnalysis,
@@ -38,6 +22,9 @@ class AiStrategyReport extends Equatable {
     required this.battleGuide,
     required this.deckLinkUrl,
     required this.confidenceScore,
+    this.archetypeExplanation,
+    this.deckBreakdown,
+    this.matchupTips,
   });
 
   @override
@@ -49,21 +36,73 @@ class AiStrategyReport extends Equatable {
         battleGuide,
         deckLinkUrl,
         confidenceScore,
+        archetypeExplanation,
+        deckBreakdown,
+        matchupTips,
       ];
 }
 
-/// Structured battle guide with three phases.
 class BattleGuide extends Equatable {
   final String opening;
   final String defense;
   final String winCondition;
 
+  // Extended fields — nullable for backward compatibility
+  final String? openingMove;
+  final String? elixirManagement;
+  final String? winConditionExecution;
+  final String? doubleElixirStrategy;
+  final String? commonMistakes;
+
   const BattleGuide({
     required this.opening,
     required this.defense,
     required this.winCondition,
+    this.openingMove,
+    this.elixirManagement,
+    this.winConditionExecution,
+    this.doubleElixirStrategy,
+    this.commonMistakes,
   });
 
   @override
-  List<Object?> get props => [opening, defense, winCondition];
+  List<Object?> get props => [
+        opening,
+        defense,
+        winCondition,
+        openingMove,
+        elixirManagement,
+        winConditionExecution,
+        doubleElixirStrategy,
+        commonMistakes,
+      ];
+}
+
+class DeckBreakdown extends Equatable {
+  final List<String>? winCondition;
+  final List<String>? spells;
+  final List<String>? airDefense;
+  final List<String>? support;
+  final List<String>? buildings;
+
+  const DeckBreakdown({
+    this.winCondition,
+    this.spells,
+    this.airDefense,
+    this.support,
+    this.buildings,
+  });
+
+  @override
+  List<Object?> get props => [winCondition, spells, airDefense, support, buildings];
+}
+
+class MatchupTip extends Equatable {
+  final String enemyArchetype;
+  final String tip;
+
+  const MatchupTip({required this.enemyArchetype, required this.tip});
+
+  @override
+  List<Object?> get props => [enemyArchetype, tip];
 }

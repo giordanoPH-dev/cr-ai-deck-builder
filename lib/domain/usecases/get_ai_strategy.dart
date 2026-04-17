@@ -19,11 +19,11 @@ class GetAiStrategy {
     required PlayerProfile profile,
     required List<CrBattle> battles,
     required String preferredArchetype,
+    required String languageName,
   }) async {
-    // Business validation: need minimum cards for deck suggestion
     if (profile.cards.length < 8) {
       return const Left(LlmFailure(
-        message: 'A coleção do jogador tem menos de 8 cartas. Não é possível sugerir um deck completo.',
+        message: 'Player collection has fewer than 8 cards. Cannot suggest a full deck.',
         code: 'INSUFFICIENT_CARDS',
       ));
     }
@@ -32,6 +32,7 @@ class GetAiStrategy {
       profile: profile,
       battles: battles,
       preferredArchetype: preferredArchetype,
+      languageName: languageName,
     );
   }
 }
