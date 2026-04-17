@@ -907,7 +907,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   label: 'Abrir no Clash Royale',
                   icon: Icons.open_in_new_rounded,
                   onTap: () async {
-                    Clipboard.setData(ClipboardData(text: deckName));
+                    await Clipboard.setData(ClipboardData(text: deckUrl));
                     Navigator.of(ctx).pop();
                     final uri = Uri.parse(deckUrl);
                     if (await canLaunchUrl(uri)) {
@@ -1722,6 +1722,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: ElevatedButton.icon(
                     onPressed: resolvedDeckUrl.isNotEmpty
                         ? () async {
+                            await Clipboard.setData(ClipboardData(text: resolvedDeckUrl));
                             final url = Uri.parse(resolvedDeckUrl);
                             if (await canLaunchUrl(url)) {
                               await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -2485,6 +2486,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 6),
         TextButton.icon(
           onPressed: () async {
+            await Clipboard.setData(ClipboardData(text: deckUrl));
             final url = Uri.parse(deckUrl);
             if (await canLaunchUrl(url)) {
               await launchUrl(url, mode: LaunchMode.externalApplication);

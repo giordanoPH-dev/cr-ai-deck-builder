@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'card_image.dart';
 import 'package:cr_ai_deck_builder/l10n/generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -73,6 +74,7 @@ class StrategyReportCard extends StatelessWidget {
         if (report.deckLinkUrl.isNotEmpty)
           ElevatedButton.icon(
             onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: report.deckLinkUrl));
               final url = Uri.parse(report.deckLinkUrl);
               if (await canLaunchUrl(url)) {
                 await launchUrl(url, mode: LaunchMode.externalApplication);
