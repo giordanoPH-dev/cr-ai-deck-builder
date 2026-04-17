@@ -10,7 +10,6 @@ import '../blocs/player/player_state.dart';
 import '../widgets/banner_ad_widget.dart';
 import '../widgets/error_display_widget.dart';
 import '../widgets/goblin_trophy_animation.dart';
-import 'api_key_screen.dart';
 import 'profile_screen.dart';
 
 /// Search screen — entry point of the application.
@@ -82,25 +81,6 @@ class _SearchScreenState extends State<SearchScreen> {
         child: SafeArea(
           child: Stack(
             children: [
-              // Settings icon — top left corner
-              Align(
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.settings_outlined,
-                      color: Colors.white38,
-                      size: 22,
-                    ),
-                    tooltip: 'Configurar API Key',
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ApiKeyScreen()),
-                    ),
-                  ),
-                ),
-              ),
               // Developer logo — top right corner
               Align(
                 alignment: Alignment.topRight,

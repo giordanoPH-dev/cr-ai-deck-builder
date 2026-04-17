@@ -902,7 +902,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
               const SizedBox(height: 16),
-              if (hasRealDeck)
+              if (hasRealDeck) ...[
                 _Push3DButton(
                   label: 'Abrir no Clash Royale',
                   icon: Icons.open_in_new_rounded,
@@ -923,8 +923,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       }
                     }
                   },
-                )
-              else
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.info_outline, size: 12, color: Colors.white30),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        'No CR: toque em "Copiar para Baralho"',
+                        style: const TextStyle(color: Colors.white30, fontSize: 10),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ] else
                 Text(
                   'Consiga as cartas marcadas em vermelho para importar este deck.',
                   style: TextStyle(color: Colors.white38, fontSize: 11),
@@ -1765,6 +1780,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
+          if (resolvedDeckUrl.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 11, color: Colors.white24),
+                  const SizedBox(width: 4),
+                  const Flexible(
+                    child: Text(
+                      'No CR: "Copiar para Baralho" na prévia do deck',
+                      style: TextStyle(color: Colors.white24, fontSize: 10),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

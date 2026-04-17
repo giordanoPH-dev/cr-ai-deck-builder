@@ -69,8 +69,7 @@ Future<void> initDependencies() async {
 
   // ── Data Sources ────────────────────────────────────────────
   final clashApiKey = dotenv.env['CLASH_ROYALE_API_KEY'] ?? '';
-  final userGeminiKey = sharedPreferences.getString(AppConstants.userGeminiApiKeyKey) ?? '';
-  final geminiApiKey = userGeminiKey.isNotEmpty ? userGeminiKey : (dotenv.env['GEMINI_API_KEY'] ?? '');
+  final geminiApiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
 
   sl.registerLazySingleton<ClashApiDatasource>(
     () => ClashApiDatasourceImpl(

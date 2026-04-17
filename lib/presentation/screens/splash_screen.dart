@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_constants.dart';
 import '../blocs/ai_strategy/ai_strategy_cubit.dart';
 import '../blocs/player/player_cubit.dart';
-import 'api_key_screen.dart';
 import 'profile_screen.dart';
 import 'search_screen.dart';
 
@@ -117,13 +116,11 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _navigate() async {
     if (!mounted) return;
     final prefs = await SharedPreferences.getInstance();
-    final userKey = prefs.getString(AppConstants.userGeminiApiKeyKey) ?? '';
-    final hasPersonalKey = userKey.isNotEmpty;
     final savedTag = prefs.getString(AppConstants.savedPlayerTagKey) ?? '';
 
     if (!mounted) return;
 
-    if (hasPersonalKey && savedTag.isNotEmpty) {
+    if (savedTag.isNotEmpty) {
       context.read<PlayerCubit>().fetchPlayer(savedTag);
       context.read<AiStrategyCubit>().loadSavedAnalysis(savedTag);
       Navigator.of(context).pushReplacement(
@@ -137,9 +134,7 @@ class _SplashScreenState extends State<SplashScreen>
     } else {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => hasPersonalKey
-              ? const SearchScreen()
-              : const ApiKeyScreen(mustConfigure: true),
+          pageBuilder: (_, __, ___) => const SearchScreen(),
           transitionsBuilder: (_, animation, __, child) =>
               FadeTransition(opacity: animation, child: child),
           transitionDuration: const Duration(milliseconds: 400),
