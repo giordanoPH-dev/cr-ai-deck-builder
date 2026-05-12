@@ -89,6 +89,9 @@ class PlayerProfileModel extends PlayerProfile {
                 maxLevel: c.maxLevel,
                 iconUrl: c.iconUrl,
                 elixirCost: c.elixirCost,
+                rarity: c.rarity,
+                evolutionLevel: c.evolutionLevel,
+                maxEvolutionLevel: c.maxEvolutionLevel,
               ))
           .toList(),
       cards: entity.cards
@@ -99,6 +102,9 @@ class PlayerProfileModel extends PlayerProfile {
                 maxLevel: c.maxLevel,
                 iconUrl: c.iconUrl,
                 elixirCost: c.elixirCost,
+                rarity: c.rarity,
+                evolutionLevel: c.evolutionLevel,
+                maxEvolutionLevel: c.maxEvolutionLevel,
               ))
           .toList(),
     );

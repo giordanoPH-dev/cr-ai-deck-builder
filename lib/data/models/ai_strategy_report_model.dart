@@ -76,6 +76,11 @@ class AiStrategyReportModel extends AiStrategyReport {
       }
     }
 
+    // LLM returned cards but not exactly 8 — log the anomaly in debug builds.
+    if (deckIds.isNotEmpty && deckIds.length != 8) {
+      assert(false, 'LLM returned ${deckIds.length} cards in suggested_deck — expected exactly 8.');
+    }
+
     // Parse battle guide — try new field names first, fall back to original
     final battleGuideJson = json['battle_guide'] as Map<String, dynamic>? ?? {};
     final opening = _safeStringOrNull(battleGuideJson['opening_move'])

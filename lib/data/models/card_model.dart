@@ -9,6 +9,8 @@ class CrCardModel extends CrCard {
     required super.iconUrl,
     super.elixirCost,
     super.rarity,
+    super.evolutionLevel,
+    super.maxEvolutionLevel,
   });
 
   factory CrCardModel.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,8 @@ class CrCardModel extends CrCard {
       iconUrl: iconUrl,
       elixirCost: json['elixirCost'] as int?,
       rarity: json['rarity'] as String?,
+      evolutionLevel: json['evolutionLevel'] as int?,
+      maxEvolutionLevel: json['maxEvolutionLevel'] as int?,
     );
   }
 
@@ -37,6 +41,8 @@ class CrCardModel extends CrCard {
       iconUrl: json['iconUrl'] as String? ?? '',
       elixirCost: json['elixirCost'] as int?,
       rarity: json['rarity'] as String?,
+      evolutionLevel: json['evolutionLevel'] as int?,
+      maxEvolutionLevel: json['maxEvolutionLevel'] as int?,
     );
   }
 
@@ -49,6 +55,8 @@ class CrCardModel extends CrCard {
       'iconUrl': iconUrl,
       'elixirCost': elixirCost,
       'rarity': rarity,
+      'evolutionLevel': evolutionLevel,
+      'maxEvolutionLevel': maxEvolutionLevel,
     };
   }
 }
