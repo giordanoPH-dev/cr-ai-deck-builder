@@ -87,27 +87,89 @@ class ArenaGuide {
     return null;
   }
 
+  static const Map<String, String> _ptToEn = {
+    'arena de treinamento': 'Training Camp',
+    'estádio goblin': 'Goblin Stadium',
+    'fosso de ossos': 'Bone Pit',
+    'fosso dos ossos': 'Bone Pit',
+    'torneio bárbaro': 'Barbarian Bowl',
+    'vale dos feitiços': 'Spell Valley',
+    'oficina do construtor': "Builder's Workshop",
+    'parquinho da pekka': "PEKKA's Playhouse",
+    'parquinho da p.e.k.k.a': "PEKKA's Playhouse",
+    'arena real': 'Royal Arena',
+    'pico congelado': 'Frozen Peak',
+    'arena da selva': 'Jungle Arena',
+    'montanha do porco': 'Hog Mountain',
+    'eletrovale': 'Electro Valley',
+    'cidade assombrada': 'Spooky Town',
+    'covil dos patifes': "Rascal's Hideout",
+    'pico sereno': 'Serenity Peak',
+    'mina do mineiro': "Miner's Mine",
+    'cozinha do construtor': "Builder's Kitchen",
+    'cozinha do executor': "Builder's Kitchen",
+    'cripta real': 'Royal Crypt',
+    'santuário silencioso': 'Silent Sanctuary',
+    'spa de dragões': 'Dragon Spa',
+    'arena lendária': 'Legendary Arena',
+  };
+
   /// Finds a guide by arena name using case-insensitive partial matching.
+  /// Supports both English and Portuguese arena names.
   /// Falls back to the highest-level guide for any unknown arena names so
   /// the app never shows "arena not found" for new or event arenas.
   static ArenaGuide? findByName(String name) {
     final lower = name.toLowerCase().trim();
+
+    // Direct match first (both directions, partial)
     for (final guide in all) {
-      if (lower == guide.arenaName.toLowerCase() ||
-          lower.contains(guide.arenaName.toLowerCase()) ||
-          guide.arenaName.toLowerCase().contains(lower)) {
+      final gn = guide.arenaName.toLowerCase();
+      if (lower == gn || lower.contains(gn) || gn.contains(lower)) {
         return guide;
       }
     }
-    // Fallback patterns for event/challenge arenas and future arena names
+
+    // Translate PT → EN then search again
+    final translated = _ptToEn[lower] ??
+        _ptToEn.entries
+            .firstWhere(
+              (e) => lower.contains(e.key) || e.key.contains(lower),
+              orElse: () => const MapEntry('', ''),
+            )
+            .value;
+    if (translated.isNotEmpty) {
+      final tl = translated.toLowerCase();
+      for (final guide in all) {
+        if (guide.arenaName.toLowerCase().contains(tl) ||
+            tl.contains(guide.arenaName.toLowerCase())) {
+          return guide;
+        }
+      }
+    }
+
+    // Keyword fallbacks for event/challenge arenas
     if (lower.contains('mosh pit') || lower.contains('moshpit')) {
       return all.firstWhere((g) => g.arenaName == 'Ultimate Mosh Pit',
           orElse: () => all.last);
     }
-    if (lower.contains('champion') || lower.contains('master') ||
-        lower.contains('legendary') || lower.contains('challenger')) {
+    if (lower.contains('lend') || lower.contains('legend')) {
       return all.last;
     }
+    if (lower.contains('champion') || lower.contains('master') ||
+        lower.contains('challenger')) {
+      return all.last;
+    }
+    // "Executioner's Kitchen" is the API name for "Builder's Kitchen"
+    if (lower.contains('kitchen') || lower.contains('executioner')) {
+      return all.firstWhere((g) => g.arenaName.toLowerCase().contains('kitchen'),
+          orElse: () => all.last);
+    }
+    // "Icy Peak" / "Glacial Peak" fallback to Serenity Peak tier
+    if (lower.contains('icy') || lower.contains('glacial') || lower.contains('peak')) {
+      return all.firstWhere((g) => g.arenaName == 'Serenity Peak',
+          orElse: () => all.last);
+    }
+
     // Generic fallback: return the highest-level guide
     return all.last;
   }
@@ -456,7 +518,7 @@ class ArenaGuide {
     // ── Spooky Town ──
     ArenaGuide(
       arenaName: 'Spooky Town',
-      trophyRange: '3.700 – 4.299 troféus',
+      trophyRange: '3.800 – 4.199 troféus',
       overview:
           'Borda do nível competitivo mais alto. Jogadores refinados exploram cada erro. Decks fora do meta são fortemente punidos.',
       commonDecks: [
@@ -479,13 +541,13 @@ class ArenaGuide {
         'No overtime, defenda a torre mais fraca e aplique pressão leve na outra lane',
       ],
       aiContext:
-          'Spooky Town (3.700-4.299 troféus): meta de alto nível com Graveyard, LavaLoon e Miner Poison. Leitura de deck e chip damage com feitiços são estratégias dominantes.',
+          'Spooky Town (3.800-4.199 troféus): meta de alto nível com Graveyard, LavaLoon e Miner Poison. Leitura de deck e chip damage com feitiços são estratégias dominantes.',
     ),
 
     // ── Rascal's Hideout ──
     ArenaGuide(
       arenaName: "Rascal's Hideout",
-      trophyRange: '4.300 – 4.999 troféus',
+      trophyRange: '4.200 – 4.599 troféus',
       overview:
           'Próximo ao topo competitivo. Apenas decks otimizados sobrevivem. O meta é definido por poucos arquétipos dominantes e a execução precisa ser impecável.',
       commonDecks: [
@@ -508,15 +570,15 @@ class ArenaGuide {
         'LavaLoon no double elixir: Lava Hound + Balloon + Freeze é push quase irresistível',
       ],
       aiContext:
-          "Rascal's Hideout (4.300-4.999 troféus): meta de topo com Hog 2.6, LavaLoon e Miner Control. Decks precisam ser otimizados para matchups específicos. Erros de elixir são fatais.",
+          "Rascal's Hideout (4.200-4.599 troféus): meta de topo com Hog 2.6, LavaLoon e Miner Control. Decks precisam ser otimizados para matchups específicos. Erros de elixir são fatais.",
     ),
 
-    // ── Serenity Peak ──
+    // ── Serenity Peak (Arena 14) ──
     ArenaGuide(
       arenaName: 'Serenity Peak',
-      trophyRange: '5.000 – 5.499 troféus',
+      trophyRange: '4.600 – 4.999 troféus',
       overview:
-          'Topo do jogo fora das ligas. Os melhores jogadores com decks maximizados. O meta é ultra-refinado e muda com cada atualização.',
+          'Próximo ao topo competitivo. Apenas decks otimizados sobrevivem. O meta é definido por poucos arquétipos dominantes e a execução precisa ser impecável.',
       commonDecks: [
         'Hog 2.6 Ciclo',
         'LavaLoon + Freeze',
@@ -537,16 +599,44 @@ class ArenaGuide {
         'No overtime, jogue defensivamente e espere o adversário errar',
       ],
       aiContext:
-          'Serenity Peak (5.000-5.499 troféus): elite com decks maximizados. Especialização em um arquétipo e domínio completo de matchups são obrigatórios.',
+          "Serenity Peak (4.600-4.999 troféus): meta de topo com Hog 2.6, LavaLoon e Miner Control. Decks precisam ser otimizados para matchups específicos. Erros de elixir são fatais.",
     ),
 
-    // ── Legendary Arena ──
-    // ── Glacier Peak (Arena 15 — adicionada em 2024) ──
+    // ── Miner's Mine (Arena 15) ──
     ArenaGuide(
-      arenaName: 'Glacial Peak',
+      arenaName: "Miner's Mine",
+      trophyRange: '5.000 – 5.499 troféus',
+      overview:
+          'Nível de jogo muito elevado. O meta é ultra-refinado com decks de ciclo e controle dominando. Erros de timing são explorados imediatamente.',
+      commonDecks: [
+        'Miner + Poison Control',
+        'Hog 2.6 Ciclo',
+        'LavaLoon',
+        'Golem Beatdown',
+        'Bridge Spam',
+      ],
+      strategies: [
+        'Domine um único arquétipo — especialização bate generalização',
+        'Saiba seus matchups de cor: favorável, desfavorável, neutro',
+        'Chip damage consistente é a forma mais segura de vencer',
+        'Adapte micro-decisões ao estilo adversário identificado no ciclo 1',
+      ],
+      winTips: [
+        'Prediction perfeita de feitiços decide até 30% das partidas',
+        'Nunca deixe o adversário ter vantagem de elixir por mais de 2 cartas',
+        'Chip damage com Miner ou feitiços acumula dano decisivo',
+        'No overtime, jogue defensivamente e espere o adversário errar',
+      ],
+      aiContext:
+          "Miner's Mine (5.000-5.499 troféus): elite com decks maximizados. Especialização em um arquétipo e domínio completo de matchups são obrigatórios.",
+    ),
+
+    // ── Builder's Kitchen (Arena 16) ──
+    ArenaGuide(
+      arenaName: "Builder's Kitchen",
       trophyRange: '5.500 – 5.999 troféus',
       overview:
-          'Arena intermediária de alto nível, entre Serenity Peak e Legendary. Jogadores refinados com decks próximos do meta perfeito.',
+          'Transição para o topo absoluto. Jogadores refinados com execução próxima do perfeito. Cada carta jogada deve ter propósito claro.',
       commonDecks: [
         'Hog 2.6 Ciclo',
         'LavaLoon',
@@ -555,22 +645,138 @@ class ArenaGuide {
         'Bridge Spam',
       ],
       strategies: [
-        'Execute seu arquétipo com consistência — inovar neste nível é arriscado',
+        'Execute seu arquétipo com consistência — inovar é arriscado neste nível',
         'Spell cycling eficiente pode decidir partidas empatadas',
         'Leia o deck adversário e identifique a carta defensiva chave',
-        'No double elixir, priorize o push mais rápido do seu ciclo',
+        'No double elixir, priorize o push mais rápido do ciclo',
       ],
       winTips: [
-        'Nesta arena, a melhor jogada é geralmente a mais segura, não a mais criativa',
-        'Chip damage acumulado com Miner ou feitiços decide jogos empatados',
+        'Nesta arena, a melhor jogada é geralmente a mais segura',
         'Defenda com o mínimo de elixir para maximizar o contra-ataque',
         'No overtime, uma torre é suficiente — jogue no relógio se necessário',
+        'Chip damage acumulado com Miner ou feitiços decide jogos empatados',
       ],
       aiContext:
-          'Glacial Peak (5.500-5.999 troféus): arena de transição para o topo. Decks refinados com execução consistente são obrigatórios.',
+          "Builder's Kitchen (5.500-5.999 troféus): arena de transição para o topo. Decks refinados com execução consistente são obrigatórios.",
     ),
 
-    // ── Tournament Arena (aparecer em batalhas de torneio) ──
+    // ── Royal Crypt (Arena 17) ──
+    ArenaGuide(
+      arenaName: 'Royal Crypt',
+      trophyRange: '6.000 – 6.499 troféus',
+      overview:
+          'Liga Master. Jogadores de nível mundial com execução refinada. Cada detalhe importa: posicionamento, timing e prediction são o padrão.',
+      commonDecks: [
+        'Hog 2.6 Ciclo',
+        'LavaLoon',
+        'Miner + Poison Control',
+        'Golem Beatdown',
+        'Bridge Spam PEKKA',
+      ],
+      strategies: [
+        'Cada carta jogada deve ter propósito claro: ataque, defesa ou ciclo',
+        'Matchup knowledge: saiba qual carta bate qual no meta atual',
+        'Gerencie o ciclo adversário — conte mentalmente o que ele já usou',
+        'Ajuste no ciclo 2 com base no que o adversário revelou',
+      ],
+      winTips: [
+        'Fazer o adversário revelar o win condition antes de você é vantagem enorme',
+        'LavaLoon: o timing do Balloon após Lava Hound morrer decide o jogo',
+        'Rocket cycling garante vitória em 3-4 ciclos com torre no baixo HP',
+        'Prediction Fireball ou Rocket em unidade + torre é frequentemente decisivo',
+      ],
+      aiContext:
+          'Royal Crypt (6.000-6.499 troféus): nível Master com execução de nível mundial. Matchup knowledge e leitura do ciclo adversário são obrigatórios.',
+    ),
+
+    // ── Silent Sanctuary (Arena 18) ──
+    ArenaGuide(
+      arenaName: 'Silent Sanctuary',
+      trophyRange: '6.500 – 6.999 troféus',
+      overview:
+          'Top 0.1% de jogadores. O jogo é levado ao limite das mecânicas. Cada elixir desperdiçado é uma ameaça de derrota.',
+      commonDecks: [
+        'Hog 2.6 Ciclo',
+        'LavaLoon + Freeze',
+        'Miner + Poison',
+        'Golem + Night Witch',
+        'Bridge Spam',
+      ],
+      strategies: [
+        'Zero desperdício de elixir: toda carta deve servir a ataque ou defesa naquele instante',
+        'Pressione apenas com vantagem de elixir confirmada',
+        'Conheça os combos do adversário e bloqueie-os no nascimento',
+        'Use o temporizador para calcular o push decisivo',
+      ],
+      winTips: [
+        'Defesa mínima para máximo contra-ataque é a fórmula de ouro',
+        'Rocket + Fireball ou Lightning destrói qualquer torre em 4-5 ciclos',
+        'Freeze no momento exato multiplica o dano exponencialmente',
+        'No overtime, jogue defensivamente e espere o adversário errar',
+      ],
+      aiContext:
+          'Silent Sanctuary (6.500-6.999 troféus): top competitivo global. Zero desperdício de elixir. Decks sem sinergia clara não sobrevivem.',
+    ),
+
+    // ── Dragon Spa (Arena 19) ──
+    ArenaGuide(
+      arenaName: 'Dragon Spa',
+      trophyRange: '7.000 – 7.499 troféus',
+      overview:
+          'Elite mundial. Apenas os melhores jogadores alcançam este nível. Meta ultra-refinado com variações semanais após patches.',
+      commonDecks: [
+        'Hog 2.6 Ciclo',
+        'LavaLoon',
+        'Miner + Poison',
+        'Golem Night Witch',
+        'X-Bow / Mortar Siege',
+      ],
+      strategies: [
+        'Acompanhe o meta semanal — um deck dominante pode mudar em 48h após patch',
+        'Cada jogada é calculada com base no ciclo adversário, não no instinto',
+        'Pressão psicológica: forçar o adversário a pensar antes de jogar é vantagem real',
+        'Treine situações específicas: como defender com elixir negativo',
+      ],
+      winTips: [
+        'Decks de ciclo rápido têm vantagem — chegam ao win condition mais vezes',
+        'Contra Golem: nunca enfrente direto — Tornado + splash na lateral',
+        'Nível de carta máximo é obrigatório — desvantagem de nível é real',
+        'Vitórias 0-1 de torre são mais comuns que 2-0 — cada torre vale',
+      ],
+      aiContext:
+          'Dragon Spa (7.000-7.499 troféus): top mundial. Meta ultra-definido. Apenas decks tier-1 com execução impecável sobem consistentemente.',
+    ),
+
+    // ── Legendary Arena (Arena 20) ──
+    ArenaGuide(
+      arenaName: 'Legendary Arena',
+      trophyRange: '7.500+ troféus',
+      overview:
+          'Lenda absoluta do Clash Royale. Menos de 500 jogadores no mundo alcançam este nível. O meta é definido POR estes jogadores.',
+      commonDecks: [
+        'Hog 2.6 Ciclo',
+        'LavaLoon + Freeze',
+        'Miner + Poison',
+        'Bridge Spam PEKKA',
+        'Golem Night Witch',
+      ],
+      strategies: [
+        'Inovação é necessária — os adversários conhecem todos os decks meta de cor',
+        'Pequenos ajustes no deck (1 carta) mudam completamente um matchup difícil',
+        'Consistência mental é tão importante quanto habilidade técnica neste nível',
+        'Adapte sua estratégia mid-game com base no que o adversário revelou',
+      ],
+      winTips: [
+        'A diferença entre vitória e derrota é frequentemente uma única carta no timing errado',
+        'Estude os TOP 10 globais do seu arquétipo e adapte as jogadas',
+        'Gerenciar tilting e manter foco em sessões longas é fundamental',
+        'No overtime, a paciência vence — espere o momento certo antes de atacar',
+      ],
+      aiContext:
+          'Legendary Arena (7.500+ troféus): top 500 mundial. Inovação, consistência mental e adaptação mid-game são os diferenciadores reais.',
+    ),
+
+    // ── Tournament Arena (aparece em batalhas de torneio) ──
     ArenaGuide(
       arenaName: 'Tournament',
       trophyRange: 'Torneios',
@@ -597,288 +803,6 @@ class ArenaGuide {
       ],
       aiContext:
           'Torneio (Tournament): ambiente competitivo com cartas niveladas. Deck skill e execução são os únicos fatores. Recomendar decks tier-1 do meta de torneio.',
-    ),
-
-    ArenaGuide(
-      arenaName: 'Legendary Arena',
-      trophyRange: '4.000+ troféus',
-      overview:
-          'Arena lendária. Jogadores experientes com decks bem construídos. O meta é diversificado mas com arquétipos dominantes claros.',
-      commonDecks: [
-        'Hog 2.6 Ciclo',
-        'LavaLoon',
-        'Miner + Poison Control',
-        'Golem Beatdown',
-        'Graveyard + Poison',
-        'Bridge Spam',
-      ],
-      strategies: [
-        'Estude o meta atual — os decks top mudam a cada atualização',
-        'Domine um único arquétipo em vez de jogar vários decks mediocres',
-        'Elixir management perfeito: nunca gaste mais do que pode defender',
-        'Acompanhe replays dos melhores jogadores do seu arquétipo',
-      ],
-      winTips: [
-        'Prediction spells são comuns — antecipe a posição das defesas adversárias',
-        'No overtime, prefira empate a arriscar troféus desnecessariamente',
-        'Identifique o win condition adversário e bloqueie-o antes de tudo',
-        'Use cada partida para treinar uma tomada de decisão específica',
-      ],
-      aiContext:
-          'Legendary Arena (4.000+ troféus): jogadores experientes com decks refinados. Meta diversificado mas com arquétipos tier-1 dominando. Sinergia de deck é crítica.',
-    ),
-
-    // ── Leagues ──
-    ArenaGuide(
-      arenaName: 'Challenger I',
-      trophyRange: '5.000 – 5.299 troféus',
-      overview:
-          'Primeiro nível de liga competitiva. Jogadores altamente habilidosos com decks otimizados para o meta atual.',
-      commonDecks: [
-        'Hog 2.6 Ciclo',
-        'Miner + Poison Control',
-        'LavaLoon',
-        'Golem Beatdown',
-        'Mortar / X-Bow Siege',
-      ],
-      strategies: [
-        'Domine seu arquétipo e conheça todos os seus matchups',
-        'Chip damage de feitiço acumulado é frequentemente o fator decisivo',
-        'Leia o deck adversário e adapte a estratégia no ciclo 2',
-        'Últimos 60 segundos decidem jogos equilibrados — pressione no clock final',
-      ],
-      winTips: [
-        'Prediction Fireball ou Rocket mata unidade de suporte e danifica a torre ao mesmo tempo',
-        'Nunca jogue seu win condition contra elixir cheio do adversário',
-        'Defenda com o mínimo de elixir possível para ter mais recursos no contra-ataque',
-        'Identifique a carta defensiva chave do oponente e force-o a usá-la antes do push',
-      ],
-      aiContext:
-          'Challenger I (5.000-5.299 troféus): liga competitiva com meta refinado. Decks tier-1 e execução consistente são obrigatórios.',
-    ),
-
-    ArenaGuide(
-      arenaName: 'Challenger II',
-      trophyRange: '5.300 – 5.599 troféus',
-      overview:
-          'Competição intensa. Os jogadores exploram cada vantagem de elixir. Metade dos decks usados são os mesmos top 5 do meta.',
-      commonDecks: [
-        'Hog 2.6 Ciclo',
-        'Miner + Poison',
-        'LavaLoon',
-        'Bridge Spam',
-        'Graveyard + Poison',
-      ],
-      strategies: [
-        'Ciclo de cartas é fundamental — saiba exatamente quantas cartas faltam para o win condition',
-        'Forçar o adversário a defender as duas lanes ao mesmo tempo é a estratégia dominante',
-        'Spell cycling na torre quando a partida está empatada ganha jogos',
-        'Identifique se o adversário tem resposta ao seu win condition e jogue de acordo',
-      ],
-      winTips: [
-        'Double lane pressure no double elixir separa jogadores bons dos ótimos',
-        'Graveyard + Poison: aplique o combo quando o adversário ficar sem feitiço',
-        'LavaLoon: treine o timing de Balloon para cair na torre logo após Lava Hound morrer',
-        'Hog 2.6: Fireball prediction no Musketeer/Tesla adversária é a jogada de habilidade número 1',
-      ],
-      aiContext:
-          'Challenger II (5.300-5.599 troféus): spell cycling e double lane pressure são estratégias dominantes. Decks precisam ter rotação defensiva rápida.',
-    ),
-
-    ArenaGuide(
-      arenaName: 'Challenger III',
-      trophyRange: '5.600 – 5.899 troféus',
-      overview:
-          'Topo da categoria Challenger. Jogadores entendem profundamente o meta e executam suas estratégias quase sem erros.',
-      commonDecks: [
-        'Hog 2.6 Ciclo',
-        'Miner + Poison',
-        'LavaLoon + Freeze',
-        'Golem Night Witch',
-        'X-Bow Siege Ciclo',
-      ],
-      strategies: [
-        'Ler o ciclo adversário é tão importante quanto executar o seu próprio',
-        'Sacrifique um push menor para garantir vantagem de elixir no push decisivo',
-        'Conheça o timing exato de deploy de cada combo do seu deck',
-        'Pressão de chip constante com Miner ou feitiços acumula dano que decide a partida',
-      ],
-      winTips: [
-        'Saiba quando aceitar perder uma torre para ganhar a partida (troca de torres)',
-        'X-Bow + Ice Golem + Tesla é quase impenetrável com timing correto',
-        'Contra Golem: nunca enfrente o push direto — defenda na lateral com Tornado',
-        'No overtime, um erro de elixir = torre perdida neste nível de precisão',
-      ],
-      aiContext:
-          'Challenger III (5.600-5.899 troféus): elite dos Challengers. Precisão no ciclo e leitura do ciclo adversário são as principais habilidades diferenciadoras.',
-    ),
-
-    ArenaGuide(
-      arenaName: 'Master I',
-      trophyRange: '5.900 – 6.199 troféus',
-      overview:
-          'Liga Master. Jogadores de nível mundial com decks no nível máximo e execução refinada.',
-      commonDecks: [
-        'Hog 2.6 Ciclo',
-        'LavaLoon',
-        'Miner + Poison Control',
-        'Golem Beatdown',
-        'Bridge Spam PEKKA',
-      ],
-      strategies: [
-        'Cada carta jogada deve ter um propósito claro: ataque, defesa ou ciclo',
-        'Matchup knowledge: saiba qual carta bate qual no meta atual',
-        'Gerencie o ciclo adversário — conte mentalmente o que ele já usou',
-        'Ajuste sua estratégia no ciclo 2 com base no que o adversário revelou',
-      ],
-      winTips: [
-        'Fazer o adversário revelar o win condition antes de você é uma vantagem enorme',
-        'Contra Bridge Spam: defenda na sua side com mínimo de cartas e contra-ataque imediato',
-        'LavaLoon: o timing do Balloon após Lava Hound morrer decide o jogo',
-        'Rocket cycling garante vitória em 3-4 ciclos se a torre estiver com pouca vida',
-      ],
-      aiContext:
-          'Master I (5.900-6.199 troféus): liga Master com execução de nível mundial. Matchup knowledge e leitura do ciclo adversário são obrigatórios.',
-    ),
-
-    ArenaGuide(
-      arenaName: 'Master II',
-      trophyRange: '6.200 – 6.499 troféus',
-      overview:
-          'Nível de torneio. Cada detalhe importa: posicionamento, timing e prediction são parte do jogo padrão.',
-      commonDecks: [
-        'Hog 2.6 Ciclo',
-        'Miner Control',
-        'LavaLoon',
-        'Golem Night Witch',
-        'Mortar Ciclo',
-      ],
-      strategies: [
-        'Posicionamento de cartas é ciência: centralize tanques, lateralize win conditions de ciclo',
-        'Prediction shots com Rocket ou Fireball valem mais do que a maioria das jogadas defensivas',
-        'Saiba sua rotação de defesa aérea — quando você usa uma, qual é a próxima no ciclo?',
-        'Não reaja impulsivamente a todo push adversário — avalie o elixir antes de defender',
-      ],
-      winTips: [
-        'Uma vitória de torre no ciclo 1 geralmente determina o vencedor da partida',
-        'Contra Golem: Inferno Tower + Tornado para afastar Baby Dragon e Night Witch',
-        'Miner + Goblin Barrel no double elixir: pressione juntos para forçar dois pontos de defesa',
-        'Timing de Freeze: espere o adversário colocar as defesas antes de congelar',
-      ],
-      aiContext:
-          'Master II (6.200-6.499 troféus): nível de torneio com posicionamento e prediction como jogadas padrão. Deck precisa de rotação defensiva sólida.',
-    ),
-
-    ArenaGuide(
-      arenaName: 'Master III',
-      trophyRange: '6.500 – 6.799 troféus',
-      overview:
-          'Top 0.1% de jogadores. O jogo é levado ao limite das mecânicas. Cada elixir desperdiçado é uma ameaça de derrota.',
-      commonDecks: [
-        'Hog 2.6 Ciclo',
-        'LavaLoon + Freeze',
-        'Miner + Poison',
-        'Golem + Night Witch',
-        'Bridge Spam',
-      ],
-      strategies: [
-        'Zero desperdício de elixir: toda carta deve servir a ataque ou defesa naquele instante',
-        'Pressione apenas com vantagem de elixir confirmada',
-        'Conheça os combos do adversário e bloqueie-os no nascimento',
-        'Use o temporizador da partida para calcular o push decisivo',
-      ],
-      winTips: [
-        'Defesa mínima para máximo contra-ataque é a fórmula de ouro',
-        'Rocket + Fireball ou Lightning destrói qualquer torre em 4-5 ciclos',
-        'Freeze no momento exato (quando torre atirando) multiplica o dano exponencialmente',
-        'No overtime, jogue defensivamente e espere o adversário errar',
-      ],
-      aiContext:
-          'Master III (6.500-6.799 troféus): top competitivo global. Zero desperdício de elixir. Decks sem sinergia clara ou win condition consistente não sobrevivem.',
-    ),
-
-    ArenaGuide(
-      arenaName: 'Champion',
-      trophyRange: '6.800 – 7.099 troféus',
-      overview:
-          'Liga Champion. Menos de 0.1% dos jogadores chegam aqui. O meta é dominado pelos decks mais refinados do mundo.',
-      commonDecks: [
-        'Hog 2.6 Ciclo',
-        'LavaLoon',
-        'Miner + Poison',
-        'Golem Beatdown',
-        'X-Bow Siege',
-      ],
-      strategies: [
-        'Domine completamente 1 deck — especialização bate generalização neste nível',
-        'Saiba de cor cada matchup: favorável, desfavorável e como jogar os neutros',
-        'Adapte micro-decisões ao estilo adversário identificado no ciclo 1',
-        'Use replays para identificar padrões repetitivos no seu próprio jogo',
-      ],
-      winTips: [
-        'Prediction perfeita de feitiços decide até 30% das partidas neste nível',
-        'Identifique se o adversário é agressivo ou passivo e ajuste sua abertura',
-        'Nunca deixe o adversário acumular +2 de vantagem de elixir por mais de 3 segundos',
-        'Chip damage consistente garante vitória — não arrisque jogadas desnecessárias',
-      ],
-      aiContext:
-          'Champion (6.800-7.099 troféus): liga de elite global. Especialização em um único arquétipo e domínio completo dos matchups são obrigatórios.',
-    ),
-
-    ArenaGuide(
-      arenaName: 'Grand Champion',
-      trophyRange: '7.100 – 7.399 troféus',
-      overview:
-          'Topo absoluto do jogo competitivo. Os melhores jogadores do mundo se encontram aqui. O meta é ultra-refinado.',
-      commonDecks: [
-        'Hog 2.6 Ciclo',
-        'LavaLoon + Freeze',
-        'Miner + Poison',
-        'Bridge Spam',
-        'Golem Night Witch',
-      ],
-      strategies: [
-        'A decisão já é tomada antes do deploy — planejamento supera reação',
-        'Leia o ciclo adversário e force-o a defender com suas cartas mais caras',
-        'Micro-positioning é crítico: centímetros de posição mudam o resultado',
-        'Identifique o padrão de abertura adversário nos primeiros 30 segundos',
-      ],
-      winTips: [
-        'Push com +2 de elixir de vantagem é quase irresistível neste nível',
-        'Spell cycling correto termina partidas mesmo contra torres com HP cheio',
-        'A vitória vem de execução superior, não de erro adversário — os adversários não erram',
-        'Foco total durante toda a partida: distrações custam jogos neste nível de precisão',
-      ],
-      aiContext:
-          'Grand Champion (7.100-7.399 troféus): top mundial. Execução perfeita, leitura de ciclo e micro-posicionamento são o padrão mínimo de jogo.',
-    ),
-
-    ArenaGuide(
-      arenaName: 'Royal Champion',
-      trophyRange: '7.400 – 7.699 troféus',
-      overview:
-          'Elite mundial. Apenas os 1.000 melhores jogadores alcançam este nível. O meta varia com cada atualização do jogo.',
-      commonDecks: [
-        'Hog 2.6 Ciclo',
-        'LavaLoon',
-        'Miner + Poison',
-        'Golem Night Witch',
-        'X-Bow / Mortar Siege',
-      ],
-      strategies: [
-        'Acompanhe o meta semanal — um deck dominante pode mudar em 48 horas após patch',
-        'Treine situações específicas: como defender um push com elixir negativo',
-        'Cada jogada é calculada com base no ciclo adversário atual, não no instinto',
-        'Pressão psicológica: forçar o adversário a pensar antes de jogar é vantagem real',
-      ],
-      winTips: [
-        'Decks de ciclo rápido têm vantagem porque chegam ao win condition mais vezes',
-        'Contra Golem: nunca enfrente direto — Tornado + splash na lateral',
-        'Nível de carta máximo é obrigatório — desvantagem de nível é desvantagem real',
-        'Vitórias 0-1 de torre são mais comuns que 2-0 — cada torre é uma vitória',
-      ],
-      aiContext:
-          'Royal Champion (7.400-7.699 troféus): top 1.000 mundial. Meta ultra-definido. Apenas decks tier-1 com execução impecável sobem consistentemente.',
     ),
 
     // ── Ultimate Mosh Pit (evento / arena especial) ──
