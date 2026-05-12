@@ -1,11 +1,11 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../constants/app_constants.dart';
 import '../../data/datasources/ai_datasource.dart';
 import '../../data/datasources/clash_api_datasource.dart';
 import '../../data/datasources/player_local_datasource.dart';
@@ -38,9 +38,9 @@ Future<void> initDependencies() async {
   try {
     await Supabase.instance.client.auth.signInAnonymously();
   } on AuthException catch (e) {
-    print('Notice: Supabase anonymous sign-in failed: ${e.message}');
+    debugPrint('Notice: Supabase anonymous sign-in failed: ${e.message}');
   } catch (e) {
-    print('Notice: Supabase anonymous sign-in failed: $e');
+    debugPrint('Notice: Supabase anonymous sign-in failed: $e');
   }
 
   // ── External ────────────────────────────────────────────────
