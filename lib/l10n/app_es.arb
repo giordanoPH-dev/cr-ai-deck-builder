@@ -101,5 +101,6 @@
   "archetypeSiege": "Asedio",
   "archetypeBait": "Cebo",
   "chooseArchetypeLabel": "Elige tu estrategia:",
-  "currentArenaLabel": "Arena actual"
+  "currentArenaLabel": "Arena actual",
+  "openClashRoyale": "ABRIR CLASH ROYALE"
 }

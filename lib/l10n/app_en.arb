@@ -101,5 +101,6 @@
   "archetypeSiege": "Siege",
   "archetypeBait": "Bait",
   "chooseArchetypeLabel": "Choose your strategy:",
-  "currentArenaLabel": "Current arena"
+  "currentArenaLabel": "Current arena",
+  "openClashRoyale": "OPEN CLASH ROYALE"
 }

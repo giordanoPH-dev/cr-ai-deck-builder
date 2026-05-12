@@ -543,6 +543,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current arena'**
   String get currentArenaLabel;
+
+  /// No description provided for @openClashRoyale.
+  ///
+  /// In en, this message translates to:
+  /// **'OPEN CLASH ROYALE'**
+  String get openClashRoyale;
 }
 
 class _AppLocalizationsDelegate

@@ -237,4 +237,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get currentArenaLabel => 'Arena actual';
+
+  @override
+  String get openClashRoyale => 'ABRIR CLASH ROYALE';
 }

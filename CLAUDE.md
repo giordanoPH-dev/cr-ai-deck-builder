@@ -39,7 +39,7 @@ Clean Architecture with strict layer separation: Presentation → Domain ← Dat
 - Navigation: direct `MaterialPageRoute` push/pop — no routing library
 
 **`lib/core/`** — Cross-cutting concerns
-- `di/injection_container.dart`: `get_it` service locator; call `setupDependencies()` at startup. Registration order: External → Core → DataSources → Repositories → UseCases → Cubits
+- `di/injection_container.dart`: `get_it` service locator; call `initDependencies()` at startup. Registration order: External → Core → DataSources → Repositories → UseCases → Cubits
 - `error/failures.dart`: sealed `Failure` hierarchy (ServerFailure, NetworkFailure, LlmFailure, PlayerNotFoundFailure, CacheFailure, UnknownFailure)
 - `network/http_client.dart`: `ResilientHttpClient` with 3-retry exponential backoff (1s→2s→4s); distinguishes retryable 5xx from non-retryable 4xx
 - `observability/`: `LoggerService` (structured JSON, Cloud Logging compatible) + `AlertDispatcher` (stub for Telegram/Sentry/GCP)
@@ -89,7 +89,7 @@ Models defined in `AppConstants.geminiModelFallbacks` — primary `gemini-2.5-fl
 
 Runtime config via `flutter_dotenv` (`.env` file, not committed). Required keys:
 - `CLASH_ROYALE_API_KEY` — Clash Royale RoyaleAPI proxy
-- `GEMINI_API_KEY` — Google Gemini (overridable per-user in SharedPreferences via `ApiKeyScreen`)
+- `GEMINI_API_KEY` — Google Gemini (developer-only; no user-facing API key screen)
 - `ADMOB_REWARDED_AD_UNIT_ID` — AdMob rewarded unit ID
 - `SUPABASE_URL` / `SUPABASE_ANON_KEY` — Supabase backend (anonymous auth + strategy cloud sync)
 
