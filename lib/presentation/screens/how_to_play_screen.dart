@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import '../../domain/entities/ai_strategy_report.dart';
 
 class HowToPlayScreen extends StatelessWidget {
@@ -15,7 +16,7 @@ class HowToPlayScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final phases = _buildPhases();
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1B4B),
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -50,16 +51,16 @@ class HowToPlayScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.amber.withValues(alpha: 0.25), Colors.amber.withValues(alpha: 0.05)],
+          colors: [AppColors.primary.withValues(alpha: 0.25), AppColors.primary.withValues(alpha: 0.05)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+        border: Border.all(color: AppColors.primaryBorder),
       ),
       child: Row(
         children: [
-          const Icon(Icons.military_tech, color: Colors.amber, size: 28),
+          const Icon(Icons.military_tech, color: AppColors.primary, size: 28),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -67,11 +68,11 @@ class HowToPlayScreen extends StatelessWidget {
               children: [
                 const Text(
                   'ESTILO DE JOGO',
-                  style: TextStyle(color: Colors.amber, fontSize: 9, letterSpacing: 1.5, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: AppColors.primary, fontSize: 9, letterSpacing: 1.5, fontWeight: FontWeight.bold),
                 ),
                 Text(
                   archetype.toUpperCase(),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20, letterSpacing: 1),
+                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 20, letterSpacing: 1),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -92,7 +93,7 @@ class HowToPlayScreen extends StatelessWidget {
         icon: Icons.play_circle_outline,
         title: 'ABERTURA',
         content: opening,
-        color: Colors.greenAccent,
+        color: AppColors.success,
       ));
     }
 
@@ -101,7 +102,7 @@ class HowToPlayScreen extends StatelessWidget {
         icon: Icons.water_drop,
         title: 'GESTÃO DE ELIXIR',
         content: guide.elixirManagement!,
-        color: const Color(0xFFCE93D8),
+        color: AppColors.roleSupport,
         assetIcon: 'assets/images/ui_icons/elixir.png',
       ));
     }
@@ -111,7 +112,7 @@ class HowToPlayScreen extends StatelessWidget {
         icon: Icons.shield_outlined,
         title: 'DEFESA',
         content: guide.defense,
-        color: Colors.blueAccent,
+        color: AppColors.accent,
       ));
     }
 
@@ -123,7 +124,7 @@ class HowToPlayScreen extends StatelessWidget {
         icon: Icons.bolt,
         title: 'CONDIÇÃO DE VITÓRIA',
         content: winExec,
-        color: Colors.amber,
+        color: AppColors.primary,
       ));
     }
 
@@ -132,7 +133,7 @@ class HowToPlayScreen extends StatelessWidget {
         icon: Icons.speed,
         title: 'DUPLO ELIXIR',
         content: guide.doubleElixirStrategy!,
-        color: Colors.orangeAccent,
+        color: AppColors.warning,
       ));
     }
 
@@ -141,7 +142,7 @@ class HowToPlayScreen extends StatelessWidget {
         icon: Icons.warning_amber_rounded,
         title: 'ERROS COMUNS',
         content: guide.commonMistakes!,
-        color: Colors.redAccent,
+        color: AppColors.error,
       ));
     }
 
@@ -152,7 +153,7 @@ class HowToPlayScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.35),
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: phase.color.withValues(alpha: 0.35)),
       ),
@@ -189,7 +190,7 @@ class HowToPlayScreen extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             phase.content,
-            style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.65),
+            style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, height: 1.65),
           ),
         ],
       ),

@@ -1,9 +1,11 @@
 import 'package:cr_ai_deck_builder/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../blocs/player/player_cubit.dart';
 import '../blocs/player/player_state.dart';
@@ -14,10 +16,12 @@ import 'profile_screen.dart';
 
 /// Search screen — entry point of the application.
 ///
-/// Uses [BlocBuilder] for reactive state rendering and
-/// [BlocListener] for navigation side-effects.
+/// Accepts an optional [initialTag] to pre-fill the search field, used when
+/// navigating from a battle history entry to look up an opponent.
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  final String? initialTag;
+
+  const SearchScreen({super.key, this.initialTag});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -30,7 +34,11 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSavedTag();
+    if (widget.initialTag != null) {
+      _tagController.text = widget.initialTag!;
+    } else {
+      _loadSavedTag();
+    }
   }
 
   Future<void> _loadSavedTag() async {
@@ -51,6 +59,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _searchPlayer() async {
+    HapticFeedback.mediumImpact();
     final tag = _tagController.text.trim().toUpperCase();
     if (tag.isEmpty) return;
 
@@ -115,7 +124,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       Text(
                         l10n.unofficialApp,
                         style: const TextStyle(
-                          color: Colors.amber,
+                          color: AppColors.primary,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
@@ -125,8 +134,8 @@ class _SearchScreenState extends State<SearchScreen> {
                       Text(
                         l10n.aiPoweredTagline,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
                           fontSize: 12,
                           letterSpacing: 1.5,
                           fontWeight: FontWeight.w300,
@@ -136,12 +145,12 @@ class _SearchScreenState extends State<SearchScreen> {
 
                       // Search Card
                       Card(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: Colors.white.withValues(alpha: 0.12),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                           side: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.1),
+                            color: AppColors.border,
                           ),
                         ),
                         child: Padding(
@@ -153,48 +162,42 @@ class _SearchScreenState extends State<SearchScreen> {
                                 controller: _tagController,
                                 focusNode: _focusNode,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.textPrimary,
                                   fontSize: 18,
                                 ),
                                 decoration: InputDecoration(
                                   labelText: l10n.playerTagLabel,
                                   labelStyle: const TextStyle(
-                                    color: Colors.amber,
+                                    color: AppColors.primary,
                                   ),
                                   hintText: l10n.playerTagHint,
-                                  hintStyle: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.3),
+                                  hintStyle: const TextStyle(
+                                    color: AppColors.textDisabled,
                                   ),
                                   prefixIcon: const Icon(
                                     Icons.tag,
-                                    color: Colors.amber,
+                                    color: AppColors.primary,
                                   ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.3,
-                                      ),
+                                    borderSide: const BorderSide(
+                                      color: AppColors.textDisabled,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
                                     borderSide: BorderSide(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.1,
-                                      ),
+                                      color: AppColors.border,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
                                     borderSide: const BorderSide(
-                                      color: Colors.amber,
+                                      color: AppColors.primary,
                                     ),
                                   ),
                                   filled: true,
-                                  fillColor: Colors.black.withValues(
-                                    alpha: 0.2,
-                                  ),
+                                  fillColor: AppColors.overlay,
                                 ),
                                 onSubmitted: (_) => _searchPlayer(),
                               ),
@@ -221,8 +224,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                             ? null
                                             : _searchPlayer,
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.amber,
-                                          foregroundColor: Colors.black87,
+                                          backgroundColor: AppColors.primary,
+                                          foregroundColor: Colors.black,
                                           padding: const EdgeInsets.symmetric(
                                             vertical: 18,
                                           ),
@@ -242,7 +245,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                                   valueColor:
                                                       AlwaysStoppedAnimation<
                                                         Color
-                                                      >(Colors.black87),
+                                                      >(Colors.black),
                                                 ),
                                               )
                                             : Text(
@@ -260,6 +263,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               const SizedBox(height: 16),
                               ElevatedButton.icon(
                                 onPressed: () async {
+                                  HapticFeedback.lightImpact();
                                   final uri = Uri.parse('clashroyale://');
                                   if (await canLaunchUrl(uri)) {
                                     await launchUrl(uri);
@@ -270,12 +274,12 @@ class _SearchScreenState extends State<SearchScreen> {
                                 },
                                 icon: const Icon(Icons.open_in_new, size: 16),
                                 label: const Text(
-                                  'OPEN CLASH ROYALE',
+                                  'ABRIR CLASH ROYALE',
                                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.amber,
-                                  foregroundColor: Colors.black87,
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.black,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -294,13 +298,13 @@ class _SearchScreenState extends State<SearchScreen> {
                         child: ExpansionTile(
                           leading: const Icon(
                             Icons.help_outline,
-                            color: Colors.amber,
+                            color: AppColors.primary,
                             size: 20,
                           ),
                           title: Text(
                             l10n.whereIsMyTag,
                             style: const TextStyle(
-                              color: Colors.white70,
+                              color: AppColors.textSecondary,
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                             ),
@@ -320,7 +324,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                   Text(
                                     l10n.tagExample,
                                     style: const TextStyle(
-                                      color: Colors.amber,
+                                      color: AppColors.primary,
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -339,8 +343,8 @@ class _SearchScreenState extends State<SearchScreen> {
                         child: Text(
                           l10n.disclaimerText,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.4),
+                          style: const TextStyle(
+                            color: AppColors.textDisabled,
                             fontSize: 9,
                             height: 1.4,
                           ),
@@ -349,8 +353,8 @@ class _SearchScreenState extends State<SearchScreen> {
                       const SizedBox(height: 16),
                       Text(
                         l10n.poweredByGemini,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
+                        style: const TextStyle(
+                          color: AppColors.textDisabled,
                           fontSize: 10,
                         ),
                       ),
@@ -374,13 +378,13 @@ class _SearchScreenState extends State<SearchScreen> {
         children: [
           CircleAvatar(
             radius: 8,
-            backgroundColor: Colors.amber,
+            backgroundColor: AppColors.primary,
             child: Text(
               number.toString(),
               style: const TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Colors.black,
               ),
             ),
           ),
@@ -388,7 +392,7 @@ class _SearchScreenState extends State<SearchScreen> {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(color: Colors.white70, fontSize: 11),
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
             ),
           ),
         ],

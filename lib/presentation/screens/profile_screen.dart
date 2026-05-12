@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get_it/get_it.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -20,13 +19,19 @@ import '../../services/ad_service.dart';
 import '../blocs/ai_strategy/ai_strategy_cubit.dart';
 import '../blocs/ai_strategy/ai_strategy_state.dart';
 import '../blocs/ai_strategy/saved_strategies_cubit.dart';
-import '../blocs/ai_strategy/saved_strategies_state.dart';
 import '../blocs/player/player_cubit.dart';
 import '../blocs/player/player_state.dart';
 import '../widgets/banner_ad_widget.dart';
 import '../widgets/battle_stats_dashboard.dart';
+import '../widgets/card_guide_sheet.dart';
+import '../widgets/empty_state_widget.dart';
 import '../widgets/error_display_widget.dart';
-import '../widgets/strategy_report_card.dart';
+import '../widgets/grade_badge.dart';
+import '../widgets/offline_banner_widget.dart';
+import '../widgets/skeleton_widgets.dart';
+import '../widgets/streak_widget.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/meta_cards.dart';
 import 'how_to_play_screen.dart';
 import 'search_screen.dart';
 
@@ -63,10 +68,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return BlocBuilder<PlayerCubit, PlayerState>(
       builder: (context, playerState) {
         if (playerState is PlayerLoading || playerState is PlayerInitial) {
-          return const Scaffold(
-            backgroundColor: Color(0xFF0D47A1),
-            body: Center(child: SpinKitWave(color: Colors.amber, size: 40)),
-          );
+          return const ProfileSkeletonScreen();
         }
 
         if (playerState is PlayerError) {
@@ -83,10 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
 
         if (playerState is! PlayerLoaded) {
-          return const Scaffold(
-            backgroundColor: Color(0xFF0D47A1),
-            body: Center(child: SpinKitWave(color: Colors.amber, size: 40)),
-          );
+          return const ProfileSkeletonScreen();
         }
 
         final profile = playerState.profile;
@@ -123,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withValues(alpha: 0.2),
+                            color: AppColors.warning.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -132,14 +131,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               const Icon(
                                 Icons.cloud_off,
                                 size: 14,
-                                color: Colors.orangeAccent,
+                                color: AppColors.warning,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 l10n.offlineBadge,
                                 style: const TextStyle(
                                   fontSize: 9,
-                                  color: Colors.orangeAccent,
+                                  color: AppColors.warning,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -159,13 +158,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
             body: Column(
               children: [
                 _buildProfileHeader(context, profile),
+                if (playerState.isFromCache)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+                    child: OfflineBannerWidget(isOffline: true),
+                  ),
+                if (battleLog.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    child: StreakWidget(battles: battleLog),
+                  ),
                 Builder(
                   builder: (context) {
                     final l10n = AppLocalizations.of(context)!;
                     return TabBar(
-                      labelColor: Colors.amber,
-                      unselectedLabelColor: Colors.white70,
-                      indicatorColor: Colors.amber,
+                      labelColor: AppColors.primary,
+                      unselectedLabelColor: AppColors.textSecondary,
+                      indicatorColor: AppColors.primary,
                       indicatorWeight: 3,
                       labelStyle: const TextStyle(
                         fontWeight: FontWeight.bold,
@@ -237,7 +246,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     AppLocalizations.of(context)!.disclaimerText,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: Colors.white30,
+                      color: AppColors.textDisabled,
                       fontSize: 8,
                       height: 1.4,
                     ),
@@ -271,12 +280,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
       child: Column(
         children: [
-          const Icon(Icons.auto_awesome, color: Colors.amber, size: 48),
+          const Icon(Icons.auto_awesome, color: AppColors.primary, size: 48),
           const SizedBox(height: 16),
           Text(
             l10n.chooseArchetypeLabel,
             style: const TextStyle(
-              color: Colors.white70,
+              color: AppColors.textSecondary,
               fontSize: 13,
               fontWeight: FontWeight.bold,
             ),
@@ -295,13 +304,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text(
             l10n.unlockAnalysis,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white60, fontSize: 12),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
           ),
           const SizedBox(height: 14),
           ElevatedButton.icon(
             onPressed: () => _triggerFullAnalysis(context, profile, battleLog),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber,
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               shape: RoundedRectangleBorder(
@@ -325,31 +334,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     PlayerProfile profile,
     List<CrBattle> battleLog,
   ) {
-    final gradeColor = _gradeColor(report.grade);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: gradeColor.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-                border: Border.all(color: gradeColor, width: 2),
-              ),
-              child: Center(
-                child: Text(
-                  report.grade,
-                  style: TextStyle(
-                    color: gradeColor,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
+            GradeRevealWidget(grade: report.grade, size: 56),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -358,7 +348,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     report.archetype.toUpperCase(),
                     style: const TextStyle(
-                      color: Colors.amber,
+                      color: AppColors.primary,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.0,
@@ -368,7 +358,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     report.gradeExplanation,
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: AppColors.textSecondary,
                       fontSize: 11,
                       height: 1.4,
                     ),
@@ -386,11 +376,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(width: 4),
                     Text(
                       report.avgElixir.toStringAsFixed(1),
-                      style: const TextStyle(color: Colors.blueAccent, fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(color: AppColors.accent, fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
-                const Text('elixir médio', style: TextStyle(color: Colors.white38, fontSize: 8)),
+                const Text('elixir médio', style: TextStyle(color: AppColors.textDisabled, fontSize: 8)),
               ],
             ),
           ],
@@ -399,7 +389,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const Text(
           'COMO JOGAR',
           style: TextStyle(
-            color: Colors.greenAccent,
+            color: AppColors.successAccent,
             fontSize: 10,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.0,
@@ -417,14 +407,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 18,
                   margin: const EdgeInsets.only(right: 8, top: 1),
                   decoration: BoxDecoration(
-                    color: Colors.greenAccent.withValues(alpha: 0.15),
+                    color: AppColors.successAccent.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
                     child: Text(
                       '${e.key + 1}',
                       style: const TextStyle(
-                        color: Colors.greenAccent,
+                        color: AppColors.successAccent,
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),
@@ -435,7 +425,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Text(
                     e.value,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                       fontSize: 11,
                       height: 1.4,
                     ),
@@ -453,7 +443,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: _buildAnalysisSection(
                 'PONTOS FORTES',
                 report.strengths,
-                Colors.greenAccent,
+                AppColors.successAccent,
                 Icons.thumb_up,
               ),
             ),
@@ -462,7 +452,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: _buildAnalysisSection(
                 'PONTOS FRACOS',
                 report.weaknesses,
-                Colors.redAccent,
+                AppColors.errorAccent,
                 Icons.thumb_down,
               ),
             ),
@@ -473,7 +463,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const Text(
             'TROCA SUGERIDA',
             style: TextStyle(
-              color: Colors.amber,
+              color: AppColors.primary,
               fontSize: 10,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.0,
@@ -487,14 +477,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const Icon(
                     Icons.remove_circle,
-                    color: Colors.redAccent,
+                    color: AppColors.errorAccent,
                     size: 14,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     s.remove,
                     style: const TextStyle(
-                      color: Colors.redAccent,
+                      color: AppColors.errorAccent,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                     ),
@@ -503,13 +493,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: EdgeInsets.symmetric(horizontal: 6),
                     child: Icon(
                       Icons.arrow_forward,
-                      color: Colors.white38,
+                      color: AppColors.textDisabled,
                       size: 14,
                     ),
                   ),
                   const Icon(
                     Icons.add_circle,
-                    color: Colors.greenAccent,
+                    color: AppColors.successAccent,
                     size: 14,
                   ),
                   const SizedBox(width: 4),
@@ -517,7 +507,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Text(
                       s.add,
                       style: const TextStyle(
-                        color: Colors.greenAccent,
+                        color: AppColors.successAccent,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),
@@ -532,7 +522,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           report.overallFeedback,
           style: const TextStyle(
-            color: Colors.white60,
+            color: AppColors.textMuted,
             fontSize: 11,
             height: 1.4,
           ),
@@ -541,8 +531,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         OutlinedButton.icon(
           onPressed: () => _triggerFullAnalysis(context, profile, battleLog),
           style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.purpleAccent,
-            side: const BorderSide(color: Colors.purpleAccent),
+            foregroundColor: AppColors.accent,
+            side: const BorderSide(color: AppColors.accent),
             padding: const EdgeInsets.symmetric(vertical: 8),
           ),
           icon: const Icon(Icons.refresh, size: 16),
@@ -586,7 +576,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Text(
               '• $item',
               style: const TextStyle(
-                color: Colors.white70,
+                color: AppColors.textSecondary,
                 fontSize: 10,
                 height: 1.3,
               ),
@@ -595,23 +585,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ],
     );
-  }
-
-  Color _gradeColor(String grade) {
-    switch (grade.toUpperCase().replaceAll('+', '').replaceAll('-', '')) {
-      case 'S':
-        return const Color(0xFFFFD700);
-      case 'A':
-        return Colors.greenAccent;
-      case 'B':
-        return Colors.lightBlueAccent;
-      case 'C':
-        return Colors.orangeAccent;
-      case 'D':
-        return Colors.deepOrangeAccent;
-      default:
-        return Colors.redAccent;
-    }
   }
 
   void _triggerFullAnalysis(
@@ -654,7 +627,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       avatar: Icon(
         icon,
         size: 16,
-        color: isSelected ? Colors.black : Colors.amber,
+        color: isSelected ? Colors.black : AppColors.primary,
       ),
       label: Text(
         displayLabel,
@@ -664,9 +637,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onSelected: (selected) {
         if (selected) setState(() => _selectedArchetype = key);
       },
-      selectedColor: Colors.amber,
+      selectedColor: AppColors.primary,
       backgroundColor: Colors.white.withValues(alpha: 0.05),
-      labelStyle: TextStyle(color: isSelected ? Colors.black : Colors.white70),
+      labelStyle: TextStyle(color: isSelected ? Colors.black : AppColors.textSecondary),
       showCheckmark: false,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
     );
@@ -700,13 +673,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                           Text(
                             profile.tag,
                             style: const TextStyle(
-                              color: Colors.amber,
+                              color: AppColors.primary,
                               letterSpacing: 1.2,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
@@ -720,7 +693,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       duration: const Duration(milliseconds: 250),
                       child: const Icon(
                         Icons.keyboard_arrow_down,
-                        color: Colors.white54,
+                        color: AppColors.textMuted,
                         size: 28,
                       ),
                     ),
@@ -741,7 +714,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const Divider(
                           height: 32,
-                          color: Colors.white24,
+                          color: AppColors.borderStrong,
                           indent: 20,
                           endIndent: 20,
                         ),
@@ -758,7 +731,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     l10n.trophiesLabel,
                                     profile.trophies.toString(),
                                     Icons.emoji_events,
-                                    Colors.amber,
+                                    AppColors.primary,
                                   ),
                                   _buildStatDivider(),
                                   if (profile.bestTrophies != null) ...[
@@ -766,7 +739,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       l10n.bestRecordLabel,
                                       profile.bestTrophies.toString(),
                                       Icons.military_tech,
-                                      Colors.orangeAccent,
+                                      AppColors.warning,
                                     ),
                                     _buildStatDivider(),
                                   ],
@@ -775,7 +748,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       l10n.levelLabel,
                                       profile.expLevel.toString(),
                                       Icons.star,
-                                      Colors.amber,
+                                      AppColors.primary,
                                     ),
                                 ],
                               );
@@ -823,7 +796,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
             boxShadow: [
               BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 20, offset: const Offset(0, 8)),
             ],
@@ -831,18 +804,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.style, color: Colors.amber, size: 32),
+              const Icon(Icons.style, color: AppColors.primary, size: 32),
               const SizedBox(height: 10),
               Text(
                 deckName,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
                 textAlign: TextAlign.center,
               ),
               if (!hasRealDeck) ...[
                 const SizedBox(height: 4),
                 Text(
                   'Cartas que você está faltando',
-                  style: TextStyle(color: Colors.amber.withValues(alpha: 0.8), fontSize: 11),
+                  style: TextStyle(color: AppColors.primary.withValues(alpha: 0.8), fontSize: 11),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -859,13 +832,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                       decoration: BoxDecoration(
                         color: owned
-                            ? Colors.green.withValues(alpha: 0.15)
-                            : Colors.red.withValues(alpha: 0.15),
+                            ? AppColors.success.withValues(alpha: 0.15)
+                            : AppColors.error.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: owned
-                              ? Colors.greenAccent.withValues(alpha: 0.5)
-                              : Colors.redAccent.withValues(alpha: 0.5),
+                              ? AppColors.successAccent.withValues(alpha: 0.5)
+                              : AppColors.errorAccent.withValues(alpha: 0.5),
                         ),
                       ),
                       child: Row(
@@ -884,7 +857,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Text(
                             name,
                             style: TextStyle(
-                              color: owned ? Colors.greenAccent : Colors.redAccent,
+                              color: owned ? AppColors.successAccent : AppColors.errorAccent,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -893,7 +866,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Icon(
                             owned ? Icons.check_circle_outline : Icons.cancel_outlined,
                             size: 12,
-                            color: owned ? Colors.greenAccent : Colors.redAccent,
+                            color: owned ? AppColors.successAccent : AppColors.errorAccent,
                           ),
                         ],
                       ),
@@ -908,6 +881,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.open_in_new_rounded,
                   onTap: () async {
                     await Clipboard.setData(ClipboardData(text: deckUrl));
+                    if (!ctx.mounted) return;
                     Navigator.of(ctx).pop();
                     final uri = Uri.parse(deckUrl);
                     if (await canLaunchUrl(uri)) {
@@ -928,12 +902,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.info_outline, size: 12, color: Colors.white30),
+                    const Icon(Icons.info_outline, size: 12, color: AppColors.textDisabled),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         'No CR: toque em "Copiar para Baralho"',
-                        style: const TextStyle(color: Colors.white30, fontSize: 10),
+                        style: const TextStyle(color: AppColors.textDisabled, fontSize: 10),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -942,13 +916,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ] else
                 Text(
                   'Consiga as cartas marcadas em vermelho para importar este deck.',
-                  style: TextStyle(color: Colors.white38, fontSize: 11),
+                  style: TextStyle(color: AppColors.textDisabled, fontSize: 11),
                   textAlign: TextAlign.center,
                 ),
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Fechar', style: TextStyle(color: Colors.white38, fontSize: 12)),
+                child: const Text('Fechar', style: TextStyle(color: AppColors.textDisabled, fontSize: 12)),
               ),
             ],
           ),
@@ -995,7 +969,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         minChildSize: 0.4,
         builder: (_, controller) => Container(
           decoration: const BoxDecoration(
-            color: Color(0xFF0D2B6B),
+            color: AppColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
@@ -1005,7 +979,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: AppColors.borderStrong,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1016,7 +990,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.castle, color: Colors.amber, size: 28),
+                    const Icon(Icons.castle, color: AppColors.primary, size: 28),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -1028,7 +1002,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Localizations.localeOf(context).languageCode,
                             ),
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textPrimary,
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
                             ),
@@ -1036,7 +1010,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Text(
                             guide.trophyRange,
                             style: const TextStyle(
-                              color: Colors.amber,
+                              color: AppColors.primary,
                               fontSize: 12,
                             ),
                           ),
@@ -1046,7 +1020,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-              const Divider(color: Colors.white12, height: 1),
+              const Divider(color: AppColors.border, height: 1),
               Expanded(
                 child: ListView(
                   controller: controller,
@@ -1055,7 +1029,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Text(
                       guide.overview,
                       style: const TextStyle(
-                        color: Colors.white70,
+                        color: AppColors.textSecondary,
                         fontSize: 13,
                         height: 1.5,
                       ),
@@ -1064,7 +1038,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildGuideSection(
                       icon: Icons.style,
                       title: AppLocalizations.of(context)!.commonDecks,
-                      color: Colors.amber,
+                      color: AppColors.primary,
                       child: Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -1089,10 +1063,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.amber.withValues(alpha: 0.12),
+                                    color: AppColors.primary.withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: Colors.amber.withValues(alpha: 0.4),
+                                      color: AppColors.primary.withValues(alpha: 0.4),
                                     ),
                                   ),
                                   child: Row(
@@ -1101,13 +1075,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       Text(
                                         e.value,
                                         style: const TextStyle(
-                                          color: Colors.white,
+                                          color: AppColors.textPrimary,
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       const SizedBox(width: 4),
-                                      const Icon(Icons.open_in_new_rounded, size: 12, color: Colors.amber),
+                                      const Icon(Icons.open_in_new_rounded, size: 12, color: AppColors.primary),
                                     ],
                                   ),
                                 ),
@@ -1120,7 +1094,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildGuideSection(
                       icon: Icons.psychology,
                       title: AppLocalizations.of(context)!.arenaStrategies,
-                      color: Colors.purpleAccent,
+                      color: AppColors.accent,
                       child: Column(
                         children: guide.strategies
                             .asMap()
@@ -1139,7 +1113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         top: 1,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.purpleAccent.withValues(
+                                        color: AppColors.accent.withValues(
                                           alpha: 0.2,
                                         ),
                                         shape: BoxShape.circle,
@@ -1148,7 +1122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         child: Text(
                                           '${e.key + 1}',
                                           style: const TextStyle(
-                                            color: Colors.purpleAccent,
+                                            color: AppColors.accent,
                                             fontSize: 10,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -1159,7 +1133,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       child: Text(
                                         e.value,
                                         style: const TextStyle(
-                                          color: Colors.white,
+                                          color: AppColors.textPrimary,
                                           fontSize: 12,
                                           height: 1.4,
                                         ),
@@ -1176,7 +1150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildGuideSection(
                       icon: Icons.emoji_events,
                       title: AppLocalizations.of(context)!.winTips,
-                      color: Colors.greenAccent,
+                      color: AppColors.successAccent,
                       child: Column(
                         children: guide.winTips
                             .map(
@@ -1187,7 +1161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   children: [
                                     const Icon(
                                       Icons.check_circle,
-                                      color: Colors.greenAccent,
+                                      color: AppColors.successAccent,
                                       size: 16,
                                     ),
                                     const SizedBox(width: 8),
@@ -1195,7 +1169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       child: Text(
                                         tip,
                                         style: const TextStyle(
-                                          color: Colors.white,
+                                          color: AppColors.textPrimary,
                                           fontSize: 12,
                                           height: 1.4,
                                         ),
@@ -1280,13 +1254,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: Colors.white,
+            color: AppColors.textPrimary,
           ),
         ),
         Text(
           label,
           style: const TextStyle(
-            color: Colors.white70,
+            color: AppColors.textSecondary,
             fontSize: 10,
             letterSpacing: 1.0,
           ),
@@ -1305,7 +1279,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return Center(
         child: Text(
           AppLocalizations.of(context)!.deckNotFound,
-          style: const TextStyle(color: Colors.white54),
+          style: const TextStyle(color: AppColors.textMuted),
         ),
       );
     }
@@ -1332,7 +1306,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             itemBuilder: (context, index) {
               final card = cards[index];
               return GestureDetector(
-                onTap: () => _showCardDialog(context, card),
+                onTap: () => CardGuideSheet.show(context, card),
                 child: _buildCardTile(card),
               );
             },
@@ -1344,7 +1318,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 SharePlus.instance.share(ShareParams(text: deckUrl)),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1565C0),
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.textPrimary,
               padding: const EdgeInsets.symmetric(vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -1371,11 +1345,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     child: const Row(
                       children: [
-                        Icon(Icons.analytics_rounded, color: Colors.purpleAccent, size: 14),
+                        Icon(Icons.analytics_rounded, color: AppColors.accent, size: 14),
                         SizedBox(width: 6),
                         Text(
                           'ANÁLISE DO DECK ATUAL',
-                          style: TextStyle(color: Colors.purpleAccent, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                          style: TextStyle(color: AppColors.accent, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0),
                         ),
                       ],
                     ),
@@ -1417,14 +1391,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.psychology,
                     title: 'ANÁLISE DO ESTILO DE JOGO',
                     content: stratReport.playstyleAnalysis,
-                    color: Colors.purpleAccent,
+                    color: AppColors.accent,
                   ),
                   const SizedBox(height: 10),
                   _buildInfoSection(
                     icon: Icons.school,
                     title: 'COACHING DO META',
                     content: stratReport.metaCoaching,
-                    color: Colors.blueAccent,
+                    color: AppColors.accent,
                   ),
                 ],
               );
@@ -1460,7 +1434,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          Text(content, style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.55)),
+          Text(content, style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, height: 1.55)),
         ],
       ),
     );
@@ -1478,23 +1452,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           FullAnalysisLoading() ||
           AiStrategyLoading() ||
           DeckAnalysisLoading() =>
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SpinKitWave(color: Colors.amber, size: 36),
-                    SizedBox(height: 16),
-                    Text(
-                      'Analisando deck e gerando sugestão...',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            const AiAnalysisSkeletonWidget(),
           FullAnalysisLoaded(:final report, :final savedAt, :final isFromCache) =>
             _buildAnalysisContent(
               context, report.strategy, profile, battleLog,
@@ -1513,8 +1471,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   OutlinedButton.icon(
                     onPressed: () => context.read<AiStrategyCubit>().reset(),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white54,
-                      side: const BorderSide(color: Colors.white24),
+                      foregroundColor: AppColors.textMuted,
+                      side: const BorderSide(color: AppColors.borderStrong),
                     ),
                     icon: const Icon(Icons.refresh, size: 16),
                     label: const Text('Tentar novamente'),
@@ -1586,7 +1544,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               icon: Icons.lightbulb_outline,
               title: 'SOBRE ESTE ESTILO',
               content: report.archetypeExplanation!,
-              color: Colors.tealAccent,
+              color: AppColors.successAccent,
             ),
             const SizedBox(height: 14),
           ],
@@ -1609,8 +1567,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           OutlinedButton.icon(
             onPressed: () => _triggerFullAnalysis(context, profile, battleLog),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white54,
-              side: const BorderSide(color: Colors.white24),
+              foregroundColor: AppColors.textMuted,
+              side: const BorderSide(color: AppColors.borderStrong),
               padding: const EdgeInsets.symmetric(vertical: 10),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
@@ -1632,23 +1590,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.blueAccent.withValues(alpha: 0.1),
+        color: AppColors.accent.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.save_outlined, color: Colors.blueAccent, size: 16),
+          const Icon(Icons.save_outlined, color: AppColors.accent, size: 16),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Análise salva em $label',
-              style: const TextStyle(color: Colors.blueAccent, fontSize: 11, fontWeight: FontWeight.bold),
+              style: const TextStyle(color: AppColors.accent, fontSize: 11, fontWeight: FontWeight.bold),
             ),
           ),
           GestureDetector(
             onTap: () => context.read<AiStrategyCubit>().clearSavedAnalysis(profile.tag),
-            child: const Icon(Icons.delete_outline, color: Colors.blueAccent, size: 16),
+            child: const Icon(Icons.delete_outline, color: AppColors.accent, size: 16),
           ),
         ],
       ),
@@ -1671,7 +1629,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1681,12 +1639,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
             child: Row(
               children: [
-                const Icon(Icons.style, color: Colors.amber, size: 20),
+                const Icon(Icons.style, color: AppColors.primary, size: 20),
                 const SizedBox(width: 10),
                 const Expanded(
                   child: Text(
                     'DECK SUGERIDO',
-                    style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2),
+                    style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2),
                   ),
                 ),
                 if (avgElixir != null)
@@ -1697,7 +1655,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(width: 4),
                       Text(
                         avgElixir.toStringAsFixed(1),
-                        style: const TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ],
                   ),
@@ -1745,7 +1703,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.greenAccent,
+                      backgroundColor: AppColors.successAccent,
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1769,8 +1727,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         }
                       : null,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.amber,
-                    side: const BorderSide(color: Colors.amber),
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
                     padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -1785,12 +1743,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, size: 11, color: Colors.white24),
+                  const Icon(Icons.info_outline, size: 11, color: AppColors.borderStrong),
                   const SizedBox(width: 4),
                   const Flexible(
                     child: Text(
                       'No CR: "Copiar para Baralho" na prévia do deck',
-                      style: TextStyle(color: Colors.white24, fontSize: 10),
+                      style: TextStyle(color: AppColors.borderStrong, fontSize: 10),
                     ),
                   ),
                 ],
@@ -1804,7 +1762,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildSuggestedTile(BuildContext context, CrCard? card, String name) {
     final rarityTxtClr = _rarityTextColor(card?.rarity);
     return GestureDetector(
-      onTap: () => _showCardDialog(context, card ?? CrCard(id: 0, name: name, level: null, maxLevel: null, iconUrl: '', rarity: null, elixirCost: null)),
+      onTap: () => CardGuideSheet.show(context, card ?? CrCard(id: 0, name: name, iconUrl: '')),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
         child: Stack(
@@ -1818,7 +1776,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     card.iconUrl,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => Center(
-                      child: Text(name.isNotEmpty ? name[0] : '?', style: const TextStyle(color: Colors.white38, fontSize: 18, fontWeight: FontWeight.bold)),
+                      child: Text(name.isNotEmpty ? name[0] : '?', style: const TextStyle(color: AppColors.textDisabled, fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ),
@@ -1827,7 +1785,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 color: Colors.black38,
                 child: Center(
-                  child: Text(name.isNotEmpty ? name[0] : '?', style: const TextStyle(color: Colors.white38, fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: Text(name.isNotEmpty ? name[0] : '?', style: const TextStyle(color: AppColors.textDisabled, fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
             if (card?.elixirCost != null)
@@ -1858,11 +1816,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildDeckBreakdownCard(BuildContext context, DeckBreakdown bd) {
     final roles = <_RoleEntry>[];
-    if (bd.winCondition?.isNotEmpty == true) roles.add(_RoleEntry('WIN CONDITION', bd.winCondition!, Colors.amber));
-    if (bd.spells?.isNotEmpty == true) roles.add(_RoleEntry('FEITIÇOS', bd.spells!, Colors.blueAccent));
-    if (bd.airDefense?.isNotEmpty == true) roles.add(_RoleEntry('DEF. AÉREA', bd.airDefense!, Colors.tealAccent));
-    if (bd.support?.isNotEmpty == true) roles.add(_RoleEntry('SUPORTE', bd.support!, Colors.purpleAccent));
-    if (bd.buildings?.isNotEmpty == true) roles.add(_RoleEntry('CONSTRUÇÕES', bd.buildings!, Colors.orangeAccent));
+    if (bd.winCondition?.isNotEmpty == true) roles.add(_RoleEntry('WIN CONDITION', bd.winCondition!, AppColors.primary));
+    if (bd.spells?.isNotEmpty == true) roles.add(_RoleEntry('FEITIÇOS', bd.spells!, AppColors.accent));
+    if (bd.airDefense?.isNotEmpty == true) roles.add(_RoleEntry('DEF. AÉREA', bd.airDefense!, AppColors.successAccent));
+    if (bd.support?.isNotEmpty == true) roles.add(_RoleEntry('SUPORTE', bd.support!, AppColors.accent));
+    if (bd.buildings?.isNotEmpty == true) roles.add(_RoleEntry('CONSTRUÇÕES', bd.buildings!, AppColors.warning));
     if (roles.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -1870,16 +1828,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.25)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Icon(Icons.account_tree_outlined, color: Colors.amber, size: 16),
+              Icon(Icons.account_tree_outlined, color: AppColors.primary, size: 16),
               SizedBox(width: 8),
-              Text('COMPOSIÇÃO DO DECK', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.0)),
+              Text('COMPOSIÇÃO DO DECK', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.0)),
             ],
           ),
           const SizedBox(height: 12),
@@ -1899,7 +1857,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Text(r.role, style: TextStyle(color: r.color, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
                     ),
                     Expanded(
-                      child: Text(r.cards.join(', '), style: const TextStyle(color: Colors.white, fontSize: 11, height: 1.4)),
+                      child: Text(r.cards.join(', '), style: const TextStyle(color: AppColors.textPrimary, fontSize: 11, height: 1.4)),
                     ),
                   ],
                 ),
@@ -1920,28 +1878,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.greenAccent.withValues(alpha: 0.2), Colors.teal.withValues(alpha: 0.1)],
+            colors: [AppColors.successAccent.withValues(alpha: 0.2), Colors.teal.withValues(alpha: 0.1)],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4)),
+          border: Border.all(color: AppColors.successAccent.withValues(alpha: 0.4)),
         ),
         child: const Row(
           children: [
-            Icon(Icons.military_tech, color: Colors.greenAccent, size: 24),
+            Icon(Icons.military_tech, color: AppColors.successAccent, size: 24),
             SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('COMO JOGAR', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 1.2)),
+                  Text('COMO JOGAR', style: TextStyle(color: AppColors.successAccent, fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 1.2)),
                   SizedBox(height: 2),
-                  Text('Abertura, defesa, condição de vitória e mais', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                  Text('Abertura, defesa, condição de vitória e mais', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: Colors.greenAccent, size: 22),
+            Icon(Icons.chevron_right, color: AppColors.successAccent, size: 22),
           ],
         ),
       ),
@@ -1954,16 +1912,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Icon(Icons.compare_arrows, color: Colors.blueAccent, size: 16),
+              Icon(Icons.compare_arrows, color: AppColors.accent, size: 16),
               SizedBox(width: 8),
-              Text('DICAS DE MATCHUP', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.0)),
+              Text('DICAS DE MATCHUP', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.0)),
             ],
           ),
           const SizedBox(height: 12),
@@ -1975,14 +1933,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.blueAccent.withValues(alpha: 0.15),
+                        color: AppColors.accent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+                        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
                       ),
-                      child: Text('vs ${tip.enemyArchetype}', style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 10)),
+                      child: Text('vs ${tip.enemyArchetype}', style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold, fontSize: 10)),
                     ),
                     const SizedBox(height: 6),
-                    Text(tip.tip, style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4)),
+                    Text(tip.tip, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
                   ],
                 ),
               )),
@@ -1994,10 +1952,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildConfidenceCard(AiStrategyReport report) {
     final pct = (report.confidenceScore * 100).toInt();
     final color = report.confidenceScore >= 0.7
-        ? Colors.greenAccent
+        ? AppColors.successAccent
         : report.confidenceScore >= 0.4
-            ? Colors.amber
-            : Colors.redAccent;
+            ? AppColors.primary
+            : AppColors.errorAccent;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -2042,7 +2000,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return Center(
         child: Text(
           emptyMessage,
-          style: const TextStyle(color: Colors.white54),
+          style: const TextStyle(color: AppColors.textMuted),
         ),
       );
     }
@@ -2087,7 +2045,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             itemBuilder: (context, index) {
               final card = sorted[index];
               return GestureDetector(
-                onTap: () => _showCardDialog(context, card),
+                onTap: () => CardGuideSheet.show(context, card),
                 child: _buildCardTile(card),
               );
             },
@@ -2105,18 +2063,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.bold,
-          color: isSelected ? Colors.black : Colors.white70,
+          color: isSelected ? Colors.black : AppColors.textSecondary,
         ),
       ),
       selected: isSelected,
       onSelected: (_) => setState(() => _sortBy = value),
-      selectedColor: Colors.amber,
+      selectedColor: AppColors.primary,
       backgroundColor: Colors.white.withValues(alpha: 0.1),
       checkmarkColor: Colors.black,
       showCheckmark: false,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      side: BorderSide(color: isSelected ? Colors.amber : Colors.white24),
+      side: BorderSide(color: isSelected ? AppColors.primary : AppColors.borderStrong),
     );
   }
 
@@ -2138,7 +2096,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Text(
                     card.name.isNotEmpty ? card.name[0] : '?',
                     style: const TextStyle(
-                      color: Colors.white38,
+                      color: AppColors.textDisabled,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -2153,6 +2111,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             right: 4,
             child: _buildLevelBadge(card, rarityTxtClr),
           ),
+          if (MetaCards.isMeta(card.name))
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(10),
+                    bottomLeft: Radius.circular(6),
+                  ),
+                ),
+                child: const Text(
+                  'META',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 7,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
           Positioned(top: 8, left: 0, child: _buildElixirDrop(card.elixirCost)),
         ],
       ),
@@ -2192,7 +2174,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text(
             '$cost',
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 10,
               fontWeight: FontWeight.bold,
               shadows: [Shadow(color: Colors.black, blurRadius: 3, offset: Offset(0, 1))],
@@ -2237,137 +2219,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _showCardDialog(BuildContext context, CrCard card) {
-    final rarityColor = _rarityTextColor(card.rarity);
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 200,
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.60),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: rarityColor.withValues(alpha: 0.6),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 24,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Card image tile
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  width: 100,
-                  height: 120,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Container(color: Colors.white.withValues(alpha: 0.05)),
-                      Transform.scale(
-                        scale: 1.1,
-                        child: Image.network(
-                          card.iconUrl,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Center(
-                            child: Text(
-                              card.name.isNotEmpty ? card.name[0] : '?',
-                              style: const TextStyle(
-                                color: Colors.white38,
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (card.elixirCost != null)
-                        Positioned(
-                          top: 6,
-                          left: 0,
-                          child: _buildElixirDrop(card.elixirCost),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                card.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (card.rarity != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  card.rarity!.toUpperCase(),
-                  style: TextStyle(
-                    color: rarityColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.4,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 6),
-              Text(
-                AppLocalizations.of(ctx)!.cardLevelInfo(
-                  (card.level ?? '?').toString(),
-                  (card.maxLevel ?? '?').toString(),
-                ),
-                style: const TextStyle(color: Colors.amber, fontSize: 13),
-              ),
-              const SizedBox(height: 14),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.amber,
-                  minimumSize: const Size(double.infinity, 36),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    side: BorderSide(color: Colors.amber.withValues(alpha: 0.4)),
-                  ),
-                ),
-                child: const Text(
-                  'OK',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildHistoryTab(BuildContext context, List<CrBattle> battleLog) {
     final l10n = AppLocalizations.of(context)!;
     if (battleLog.isEmpty) {
-      return Center(
-        child: Text(
-          l10n.noBattlesFound,
-          style: const TextStyle(color: Colors.white54),
-        ),
-      );
+      return const EmptyStateWidget(type: EmptyStateType.battles);
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: battleLog.length,
+    // Compute W/L/D from battleLog
+    int wins = 0, losses = 0, draws = 0;
+    for (final b in battleLog) {
+      final tc = b.team.isNotEmpty ? b.team.first.crowns : 0;
+      final oc = b.opponent.isNotEmpty ? b.opponent.first.crowns : 0;
+      if (tc > oc) { wins++; }
+      else if (tc < oc) { losses++; }
+      else { draws++; }
+    }
+    return Column(
+      children: [
+        _buildBattlesSummaryRow(wins, losses, draws, battleLog.length),
+        Expanded(
+          child: ListView.builder(
+            key: const PageStorageKey('battles'),
+            padding: const EdgeInsets.all(16.0),
+            itemCount: battleLog.length,
       itemBuilder: (context, index) {
         final battle = battleLog[index];
         final teamParticipant = battle.team.isNotEmpty
@@ -2383,8 +2257,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final isDraw = teamCrowns == oppCrowns;
 
         final resultColor = isWin
-            ? Colors.greenAccent
-            : (isDraw ? Colors.white54 : Colors.redAccent);
+            ? AppColors.successAccent
+            : (isDraw ? AppColors.textMuted : AppColors.errorAccent);
         final resultText = isWin
             ? l10n.victory
             : (isDraw ? l10n.draw : l10n.defeat);
@@ -2415,7 +2289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Text(
                         oppParticipant?.name ?? 'Unknown',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -2430,7 +2304,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     Text(
@@ -2454,7 +2328,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Text(
                       AppLocalizations.of(context)!.yourDeck,
                       style: const TextStyle(
-                        color: Colors.white70,
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
                       ),
@@ -2465,7 +2339,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Text(
                       AppLocalizations.of(context)!.opponentDeck,
                       style: const TextStyle(
-                        color: Colors.white70,
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
                       ),
@@ -2479,6 +2353,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       },
+    ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBattlesSummaryRow(int wins, int losses, int draws, int total) {
+    final wr = total > 0 ? (wins / total * 100).toStringAsFixed(0) : '0';
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderMedium),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _summaryChip(Icons.check_circle_outline, '$wins', AppColors.battleVictory),
+          if (draws > 0) _summaryChip(Icons.remove_circle_outline, '$draws', AppColors.battleDraw),
+          _summaryChip(Icons.cancel_outlined, '$losses', AppColors.battleDefeat),
+          Text(
+            '$wr% WR',
+            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 20),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryChip(IconData icon, String count, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 16),
+        const SizedBox(width: 4),
+        Text(count, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 15)),
+      ],
     );
   }
 
@@ -2486,7 +2399,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (cards.isEmpty) {
       return Text(
         AppLocalizations.of(context)!.noCards,
-        style: const TextStyle(color: Colors.white30, fontSize: 10),
+        style: const TextStyle(color: AppColors.textDisabled, fontSize: 10),
       );
     }
 
@@ -2509,7 +2422,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           itemBuilder: (context, index) {
             final card = cards[index];
             return GestureDetector(
-              onTap: () => _showCardDialog(context, card),
+              onTap: () => CardGuideSheet.show(context, card),
               child: _buildCardTile(card),
             );
           },
@@ -2529,12 +2442,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: const Icon(
             Icons.download_rounded,
             size: 14,
-            color: Colors.greenAccent,
+            color: AppColors.successAccent,
           ),
           label: Text(
             AppLocalizations.of(context)!.importButton,
             style: const TextStyle(
-              color: Colors.greenAccent,
+              color: AppColors.successAccent,
               fontSize: 10,
               fontWeight: FontWeight.bold,
             ),
@@ -2544,90 +2457,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSavedTab(BuildContext context, String playerTag) {
-    return BlocBuilder<SavedStrategiesCubit, SavedStrategiesState>(
-      builder: (context, state) {
-        return switch (state) {
-          SavedStrategiesLoading() => const Center(
-              child: SpinKitPulse(color: Colors.amber, size: 40),
-            ),
-          SavedStrategiesLoaded(:final reports) => reports.isEmpty
-              ? const Center(
-                  child: Text(
-                    'Nenhuma estratégia salva ainda.',
-                    style: TextStyle(color: Colors.white54, fontSize: 13),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: reports.length,
-                  itemBuilder: (context, index) {
-                    final report = reports[index];
-                    return Card(
-                      color: Colors.white.withValues(alpha: 0.05),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
-                      ),
-                      child: ListTile(
-                        leading: const Icon(Icons.auto_awesome, color: Colors.amber),
-                        title: Text(
-                          report.suggestedDeckNames.join(', '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                        subtitle: Text(
-                          report.playstyleAnalysis,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: Colors.white70, fontSize: 11),
-                        ),
-                        trailing: const Icon(Icons.chevron_right, color: Colors.white30),
-                        onTap: () {
-                          // Show full report in a dialog or navigate
-                          showModalBottomSheet(
-                            context: context,
-                            backgroundColor: const Color(0xFF1A237E),
-                            isScrollControlled: true,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                            ),
-                            builder: (context) => DraggableScrollableSheet(
-                              initialChildSize: 0.7,
-                              maxChildSize: 0.9,
-                              minChildSize: 0.5,
-                              expand: false,
-                              builder: (context, scrollController) => SingleChildScrollView(
-                                controller: scrollController,
-                                padding: const EdgeInsets.all(24),
-                                child: StrategyReportCard(
-                                  report: report,
-                                  playerCards: context.read<PlayerCubit>().state is PlayerLoaded
-                                      ? (context.read<PlayerCubit>().state as PlayerLoaded).profile.cards
-                                      : const [],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-          SavedStrategiesError(:final failure) => Center(
-              child: Text(
-                failure.message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
-              ),
-            ),
-          SavedStrategiesInitial() => const SizedBox.shrink(),
-        };
-      },
-    );
-  }
 }
 
 class _RoleEntry {
@@ -2701,7 +2530,7 @@ class _AnimatedArenaButtonState extends State<_AnimatedArenaButton> {
                     end: Alignment.bottomCenter,
                   ),
                   borderRadius: BorderRadius.circular(_radius),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.8)),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.8)),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(_radius),
