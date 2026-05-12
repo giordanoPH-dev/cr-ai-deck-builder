@@ -11,9 +11,6 @@ import 'ai_strategy_state.dart';
 ///
 /// Handles archetype selection and delegates analysis to the
 /// [GetAiStrategy] use case.
-import '../../../domain/usecases/save_ai_strategy.dart';
-
-// ... class AiStrategyCubit ...
 class AiStrategyCubit extends Cubit<AiStrategyState> {
   final GetAiStrategy _getAiStrategy;
   final GetFullAnalysis _getFullAnalysis;

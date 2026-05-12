@@ -30,15 +30,18 @@ class PlayerLoaded extends PlayerState {
   final List<CrBattle> battles;
   /// True if data came from cache (offline mode).
   final bool isFromCache;
+  /// Incremented on each silent refresh to bypass Equatable equality check.
+  final int refreshId;
 
   const PlayerLoaded({
     required this.profile,
     required this.battles,
     this.isFromCache = false,
+    this.refreshId = 0,
   });
 
   @override
-  List<Object?> get props => [profile, battles, isFromCache];
+  List<Object?> get props => [profile, battles, isFromCache, refreshId];
 }
 
 /// Error state with typed failure and retry capability.

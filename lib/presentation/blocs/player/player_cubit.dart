@@ -10,6 +10,7 @@ import 'player_state.dart';
 class PlayerCubit extends Cubit<PlayerState> {
   final GetPlayerProfile _getPlayerProfile;
   final LoggerService _logger;
+  int _refreshId = 0;
 
   PlayerCubit({
     required GetPlayerProfile getPlayerProfile,
@@ -40,6 +41,34 @@ class PlayerCubit extends Cubit<PlayerState> {
         emit(PlayerLoaded(
           profile: data.profile,
           battles: data.battles,
+        ));
+      },
+    );
+  }
+
+  /// Refreshes player data without emitting PlayerLoading (silent refresh).
+  /// Keeps the current UI state while fetching, then updates with new data.
+  /// Uses [_refreshId] to bypass Equatable equality even if data is unchanged.
+  Future<void> refreshPlayer(String tag) async {
+    if (tag.isEmpty) return;
+    _logger.info('PlayerCubit: Refreshing player', metadata: {'tag': tag});
+
+    final result = await _getPlayerProfile(tag);
+
+    result.fold(
+      (failure) {
+        _logger.warn('PlayerCubit: Refresh failed', metadata: {'failure': failure.message});
+        emit(PlayerError(failure: failure));
+      },
+      (data) {
+        _logger.info('PlayerCubit: Player refreshed', metadata: {
+          'name': data.profile.name,
+          'battles': data.battles.length,
+        });
+        emit(PlayerLoaded(
+          profile: data.profile,
+          battles: data.battles,
+          refreshId: ++_refreshId,
         ));
       },
     );
