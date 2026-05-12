@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/meta_cards.dart';
 import '../../core/data/card_guide.dart';
 import '../../domain/entities/card.dart';
 import 'card_image.dart';
@@ -123,7 +125,19 @@ class _CardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final roleColor = guide != null ? _roleColor(guide!.role) : AppColors.roleDefault;
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Improvement 2: Rarity color accent bar
+        Container(
+          height: 3,
+          decoration: BoxDecoration(
+            color: AppColors.rarityColor(card.rarity),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
@@ -155,13 +169,62 @@ class _CardHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                card.name,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      card.name,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  // Improvement 3: Elixir cost circle
+                  if (card.elixirCost != null) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 22,
+                      height: 22,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF7B1FA2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${card.elixirCost}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  // Improvement 1: META badge
+                  if (MetaCards.isMeta(card.name)) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'META',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               const SizedBox(height: 4),
               if (guide != null)
@@ -205,6 +268,8 @@ class _CardHeader extends StatelessWidget {
               ],
             ],
           ),
+        ),
+      ],
         ),
       ],
     );
@@ -340,7 +405,12 @@ class _CardNameList extends StatelessWidget {
           children: cardNames.map((name) {
             final hasGuide = CardGuide.forCard(name) != null;
             return GestureDetector(
-              onTap: hasGuide ? () => onTap(name) : null,
+              onTap: hasGuide
+                  ? () {
+                      HapticFeedback.selectionClick();
+                      onTap(name);
+                    }
+                  : null,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(

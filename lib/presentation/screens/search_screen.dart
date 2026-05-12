@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cr_ai_deck_builder/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,6 +32,9 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _tagController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  List<String> _recentTags = [];
+
+  static const String _recentTagsKey = 'recent_player_tags';
 
   @override
   void initState() {
@@ -39,6 +44,7 @@ class _SearchScreenState extends State<SearchScreen> {
     } else {
       _loadSavedTag();
     }
+    _loadRecentTags();
   }
 
   Future<void> _loadSavedTag() async {
@@ -47,6 +53,43 @@ class _SearchScreenState extends State<SearchScreen> {
     if (savedTag != null && savedTag.isNotEmpty && mounted) {
       setState(() {
         _tagController.text = savedTag;
+      });
+    }
+  }
+
+  Future<void> _loadRecentTags() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_recentTagsKey);
+    if (raw != null && mounted) {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        setState(() {
+          _recentTags = decoded.cast<String>();
+        });
+      }
+    }
+  }
+
+  Future<void> _saveRecentTag(String tag) async {
+    final normalized = tag.startsWith('#') ? tag.substring(1) : tag;
+    final updated = [normalized, ..._recentTags.where((t) => t != normalized)];
+    final truncated = updated.take(5).toList();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_recentTagsKey, jsonEncode(truncated));
+    if (mounted) {
+      setState(() {
+        _recentTags = truncated;
+      });
+    }
+  }
+
+  Future<void> _removeRecentTag(String tag) async {
+    final updated = _recentTags.where((t) => t != tag).toList();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_recentTagsKey, jsonEncode(updated));
+    if (mounted) {
+      setState(() {
+        _recentTags = updated;
       });
     }
   }
@@ -67,6 +110,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.savedPlayerTagKey, tag);
+    await _saveRecentTag(tag);
 
     if (mounted) {
       context.read<PlayerCubit>().fetchPlayer(tag);
@@ -201,6 +245,81 @@ class _SearchScreenState extends State<SearchScreen> {
                                 ),
                                 onSubmitted: (_) => _searchPlayer(),
                               ),
+                              if (_recentTags.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.history,
+                                      size: 14,
+                                      color: AppColors.primary,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    const Text(
+                                      'Recentes',
+                                      style: TextStyle(
+                                        color: AppColors.textMuted,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: _recentTags.map((tag) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 8),
+                                        child: InkWell(
+                                          onTap: () {
+                                            _tagController.text = tag;
+                                            _searchPlayer();
+                                          },
+                                          borderRadius: BorderRadius.circular(20),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.card,
+                                              borderRadius: BorderRadius.circular(20),
+                                              border: Border.all(
+                                                color: AppColors.borderMedium,
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  '#$tag',
+                                                  style: const TextStyle(
+                                                    color: AppColors.textSecondary,
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                GestureDetector(
+                                                  onTap: () => _removeRecentTag(tag),
+                                                  child: const Icon(
+                                                    Icons.close,
+                                                    size: 12,
+                                                    color: AppColors.textDisabled,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
                               const SizedBox(height: 24),
                               BlocBuilder<PlayerCubit, PlayerState>(
                                 builder: (context, state) {

@@ -17,7 +17,7 @@ class HowToPlayScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final phases = _buildPhases();
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1B4B),
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -103,7 +103,7 @@ class HowToPlayScreen extends StatelessWidget {
         icon: Icons.water_drop,
         title: 'GESTÃO DE ELIXIR',
         content: guide.elixirManagement!,
-        color: const Color(0xFFCE93D8),
+        color: AppColors.roleSupport,
         assetIcon: 'assets/images/ui_icons/elixir.png',
       ));
     }

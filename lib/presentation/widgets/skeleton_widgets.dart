@@ -55,9 +55,9 @@ class _ShimmerBoxState extends State<_ShimmerBox>
             begin: Alignment(_animation.value - 1, 0),
             end: Alignment(_animation.value, 0),
             colors: const [
-              Color(0xFF1A1F2E),
-              Color(0xFF2A3050),
-              Color(0xFF1A1F2E),
+              AppColors.card,
+              AppColors.cardElevated,
+              AppColors.card,
             ],
           ),
         ),

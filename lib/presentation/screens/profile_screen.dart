@@ -73,7 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         if (playerState is PlayerError) {
           return Scaffold(
-            backgroundColor: const Color(0xFF0D47A1),
+            backgroundColor: AppColors.surface,
             appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
             body: ErrorDisplayWidget(
               failure: playerState.failure,
@@ -97,7 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return DefaultTabController(
           length: 5,
           child: Scaffold(
-            backgroundColor: const Color(0xFF0D47A1),
+            backgroundColor: AppColors.surface,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
@@ -638,7 +638,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (selected) setState(() => _selectedArchetype = key);
       },
       selectedColor: AppColors.primary,
-      backgroundColor: Colors.white.withValues(alpha: 0.05),
+      backgroundColor: AppColors.border,
       labelStyle: TextStyle(color: isSelected ? Colors.black : AppColors.textSecondary),
       showCheckmark: false,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
@@ -650,9 +650,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.all(16.0),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: AppColors.borderMedium,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(color: AppColors.borderMedium),
         ),
         child: Column(
           children: [
@@ -791,7 +791,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF1A237E), Color(0xFF0D47A1)],
+              colors: [AppColors.card, AppColors.surface],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -1235,7 +1235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       width: 1,
       height: 40,
-      color: Colors.white.withValues(alpha: 0.1),
+      color: AppColors.borderMedium,
     );
   }
 
@@ -1317,7 +1317,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () =>
                 SharePlus.instance.share(ShareParams(text: deckUrl)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1565C0),
+              backgroundColor: AppColors.accent,
               foregroundColor: AppColors.textPrimary,
               padding: const EdgeInsets.symmetric(vertical: 10),
               shape: RoundedRectangleBorder(
@@ -1624,7 +1624,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1A237E), Color(0xFF283593)],
+          colors: [AppColors.card, AppColors.cardElevated],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -1981,7 +1981,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: report.confidenceScore,
-              backgroundColor: Colors.white.withValues(alpha: 0.1),
+              backgroundColor: AppColors.borderMedium,
               valueColor: AlwaysStoppedAnimation(color),
               minHeight: 8,
             ),
@@ -2069,7 +2069,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       selected: isSelected,
       onSelected: (_) => setState(() => _sortBy = value),
       selectedColor: AppColors.primary,
-      backgroundColor: Colors.white.withValues(alpha: 0.1),
+      backgroundColor: AppColors.borderMedium,
       checkmarkColor: Colors.black,
       showCheckmark: false,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
@@ -2188,17 +2188,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Color _rarityTextColor(String? rarity) {
     switch (rarity?.toLowerCase()) {
       case 'common':
-        return const Color(0xFFA4D5FF);
+        return AppColors.rarityCommon;
       case 'rare':
-        return const Color(0xFFF8CA65);
+        return AppColors.rarityRare;
       case 'epic':
-        return const Color(0xFFFD9BFD);
+        return AppColors.rarityEpic;
       case 'legendary':
-        return const Color(0xFFAAFF76);
+        return AppColors.rarityLegendary;
       case 'champion':
-        return const Color(0xFFFDE305);
+        return AppColors.rarityChampion;
       default:
-        return const Color(0xFF546E7A);
+        return AppColors.rarityUnknown;
     }
   }
 
@@ -2264,11 +2264,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             : (isDraw ? l10n.draw : l10n.defeat);
 
         return Card(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: AppColors.border,
           margin: const EdgeInsets.only(bottom: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+            side: BorderSide(color: AppColors.border),
           ),
           child: ExpansionTile(
             title: Row(
@@ -2509,7 +2509,7 @@ class _AnimatedArenaButtonState extends State<_AnimatedArenaButton> {
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFB8940A),
+                  color: AppColors.primary.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(_radius),
                 ),
               ),
@@ -2525,7 +2525,7 @@ class _AnimatedArenaButtonState extends State<_AnimatedArenaButton> {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFFFD740), Color(0xFFFFC107)],
+                    colors: [AppColors.primary, AppColors.warning],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -2623,7 +2623,7 @@ class _Push3DButtonState extends State<_Push3DButton> {
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFB8940A),
+                  color: AppColors.primary.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
@@ -2638,7 +2638,7 @@ class _Push3DButtonState extends State<_Push3DButton> {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFFFD740), Color(0xFFFFC107)],
+                    colors: [AppColors.primary, AppColors.warning],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
