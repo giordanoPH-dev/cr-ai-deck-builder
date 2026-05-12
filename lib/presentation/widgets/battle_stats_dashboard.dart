@@ -2,6 +2,7 @@ import 'card_image.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../domain/entities/battle.dart';
 import '../../domain/entities/card.dart';
 import '../../domain/entities/player.dart';
@@ -29,6 +30,8 @@ class BattleStatsDashboard extends StatelessWidget {
       children: [
         _buildPlayerStatsHeader(s),
         const SizedBox(height: 16),
+        _buildRecentFormSection(),
+        const SizedBox(height: 16),
         _buildWinRateSection(s),
         const SizedBox(height: 16),
         _buildTrophyProgressionSection(s),
@@ -51,26 +54,94 @@ class BattleStatsDashboard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _statTile('NÍVEL', '${profile.expLevel ?? '?'}', Icons.star, Colors.amber),
+              _statTile('NÍVEL', '${profile.expLevel ?? '?'}', Icons.star, AppColors.primary),
               _vDivider(),
-              _statTile('TROFÉUS', '${profile.trophies}', Icons.emoji_events, Colors.amber),
+              _statTile('TROFÉUS', '${profile.trophies}', Icons.emoji_events, AppColors.primary),
               _vDivider(),
-              _statTile('RECORDE', '${profile.bestTrophies ?? profile.trophies}', Icons.military_tech, Colors.orangeAccent),
+              _statTile('RECORDE', '${profile.bestTrophies ?? profile.trophies}', Icons.military_tech, AppColors.warning),
             ],
           ),
           if (profile.wins != null || profile.losses != null) ...[
-            const Divider(color: Colors.white12, height: 24),
+            const Divider(color: AppColors.borderMedium, height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _statTile('VITÓRIAS', '${profile.wins ?? 0}', Icons.thumb_up, Colors.greenAccent),
+                _statTile('VITÓRIAS', '${profile.wins ?? 0}', Icons.thumb_up, AppColors.successAccent),
                 _vDivider(),
-                _statTile('DERROTAS', '${profile.losses ?? 0}', Icons.thumb_down, Colors.redAccent),
+                _statTile('DERROTAS', '${profile.losses ?? 0}', Icons.thumb_down, AppColors.errorAccent),
                 _vDivider(),
-                _statTile('WIN RATE', '${s.lifetimeWinRate}%', Icons.trending_up, Colors.blueAccent),
+                _statTile('WIN RATE', '${s.lifetimeWinRate}%', Icons.trending_up, AppColors.accent),
               ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  // ── Recent form ───────────────────────────────────────────────────
+  Widget _buildRecentFormSection() {
+    final recent = battles.take(10).toList();
+    if (recent.isEmpty) return const SizedBox.shrink();
+
+    return _Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle('FORMA RECENTE', Icons.timeline, AppColors.accent),
+          const SizedBox(height: 12),
+          Row(
+            children: recent.map((battle) {
+              final tc = battle.team.isNotEmpty ? battle.team.first.crowns : 0;
+              final oc = battle.opponent.isNotEmpty ? battle.opponent.first.crowns : 0;
+              final isWin = tc > oc;
+              final isDraw = tc == oc;
+              final color = isWin
+                  ? AppColors.successAccent
+                  : (isDraw ? AppColors.textDisabled : AppColors.errorAccent);
+              final label = isWin ? 'V' : (isDraw ? 'E' : 'D');
+              final delta = battle.team.isNotEmpty ? battle.team.first.trophyChange : null;
+
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: color.withValues(alpha: 0.6), width: 1.5),
+                        ),
+                        child: Center(
+                          child: Text(
+                            label,
+                            style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (delta != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          delta >= 0 ? '+$delta' : '$delta',
+                          style: TextStyle(
+                            color: delta >= 0 ? AppColors.successAccent : AppColors.errorAccent,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ],
       ),
     );
@@ -81,13 +152,13 @@ class BattleStatsDashboard extends StatelessWidget {
       children: [
         Icon(icon, color: color, size: 20),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 9, letterSpacing: 0.8)),
+        Text(value, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+        Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 9, letterSpacing: 0.8)),
       ],
     );
   }
 
-  Widget _vDivider() => Container(width: 1, height: 36, color: Colors.white12);
+  Widget _vDivider() => Container(width: 1, height: 36, color: AppColors.borderMedium);
 
   // ── Win rate pie chart ────────────────────────────────────────────
   Widget _buildWinRateSection(_Stats s) {
@@ -98,7 +169,7 @@ class BattleStatsDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('RESULTADO DAS BATALHAS', Icons.pie_chart, Colors.purpleAccent),
+          _sectionTitle('RESULTADO DAS BATALHAS', Icons.pie_chart, AppColors.roleSupport),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -113,7 +184,7 @@ class BattleStatsDashboard extends StatelessWidget {
                       if (s.wins > 0)
                         PieChartSectionData(
                           value: s.wins.toDouble(),
-                          color: Colors.greenAccent,
+                          color: AppColors.successAccent,
                           title: '${s.wins}',
                           radius: 40,
                           titleStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 11),
@@ -121,18 +192,18 @@ class BattleStatsDashboard extends StatelessWidget {
                       if (s.losses > 0)
                         PieChartSectionData(
                           value: s.losses.toDouble(),
-                          color: Colors.redAccent,
+                          color: AppColors.errorAccent,
                           title: '${s.losses}',
                           radius: 40,
-                          titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                          titleStyle: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 11),
                         ),
                       if (s.draws > 0)
                         PieChartSectionData(
                           value: s.draws.toDouble(),
-                          color: Colors.white38,
+                          color: AppColors.textDisabled,
                           title: '${s.draws}',
                           radius: 40,
-                          titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                          titleStyle: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 11),
                         ),
                     ],
                   ),
@@ -143,21 +214,21 @@ class BattleStatsDashboard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _legend(Colors.greenAccent, 'Vitórias', s.wins, total),
+                    _legend(AppColors.successAccent, 'Vitórias', s.wins, total),
                     const SizedBox(height: 8),
-                    _legend(Colors.redAccent, 'Derrotas', s.losses, total),
+                    _legend(AppColors.errorAccent, 'Derrotas', s.losses, total),
                     if (s.draws > 0) ...[
                       const SizedBox(height: 8),
-                      _legend(Colors.white38, 'Empates', s.draws, total),
+                      _legend(AppColors.textDisabled, 'Empates', s.draws, total),
                     ],
                     const SizedBox(height: 12),
                     Text(
                       'Win rate: ${s.recentWinRate}%',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
                     ),
                     Text(
                       'Últimas $total batalhas',
-                      style: const TextStyle(color: Colors.white54, fontSize: 10),
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
                     ),
                   ],
                 ),
@@ -187,11 +258,11 @@ class BattleStatsDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _sectionTitle('PROGRESSÃO DE TROFÉUS', Icons.show_chart, Colors.amber),
+            _sectionTitle('PROGRESSÃO DE TROFÉUS', Icons.show_chart, AppColors.primary),
             const SizedBox(height: 12),
             const Text(
               'Dados insuficientes. Jogue mais batalhas ladder para ver seu progresso.',
-              style: TextStyle(color: Colors.white54, fontSize: 12),
+              style: TextStyle(color: AppColors.textMuted, fontSize: 12),
             ),
           ],
         ),
@@ -205,11 +276,11 @@ class BattleStatsDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('PROGRESSÃO DE TROFÉUS', Icons.show_chart, Colors.amber),
+          _sectionTitle('PROGRESSÃO DE TROFÉUS', Icons.show_chart, AppColors.primary),
           const SizedBox(height: 4),
           Text(
             'Baseado em ${s.trophySpots.length} batalhas ladder',
-            style: const TextStyle(color: Colors.white38, fontSize: 10),
+            style: const TextStyle(color: AppColors.textDisabled, fontSize: 10),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -233,7 +304,7 @@ class BattleStatsDashboard extends StatelessWidget {
                       reservedSize: 44,
                       getTitlesWidget: (value, meta) => Text(
                         value.toInt().toString(),
-                        style: const TextStyle(color: Colors.white38, fontSize: 9),
+                        style: const TextStyle(color: AppColors.textDisabled, fontSize: 9),
                       ),
                     ),
                   ),
@@ -243,13 +314,13 @@ class BattleStatsDashboard extends StatelessWidget {
                   LineChartBarData(
                     spots: s.trophySpots,
                     isCurved: true,
-                    color: Colors.amber,
+                    color: AppColors.primary,
                     barWidth: 2.5,
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (spot, pct, bar, idx) => FlDotCirclePainter(
                         radius: 3,
-                        color: Colors.amber,
+                        color: AppColors.primary,
                         strokeWidth: 0,
                         strokeColor: Colors.transparent,
                       ),
@@ -257,7 +328,7 @@ class BattleStatsDashboard extends StatelessWidget {
                     belowBarData: BarAreaData(
                       show: true,
                       gradient: LinearGradient(
-                        colors: [Colors.amber.withValues(alpha: 0.25), Colors.amber.withValues(alpha: 0.0)],
+                        colors: [AppColors.primary.withValues(alpha: 0.25), AppColors.primary.withValues(alpha: 0.0)],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
@@ -268,7 +339,7 @@ class BattleStatsDashboard extends StatelessWidget {
                     LineChartBarData(
                       spots: [FlSpot(0, s.bestTrophiesY!), FlSpot((s.trophySpots.length - 1).toDouble(), s.bestTrophiesY!)],
                       isCurved: false,
-                      color: Colors.orangeAccent.withValues(alpha: 0.5),
+                      color: AppColors.warning.withValues(alpha: 0.5),
                       barWidth: 1,
                       dashArray: [6, 4],
                       dotData: FlDotData(show: false),
@@ -283,9 +354,9 @@ class BattleStatsDashboard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 6),
               child: Row(
                 children: [
-                  Container(width: 16, height: 2, color: Colors.orangeAccent.withValues(alpha: 0.5)),
+                  Container(width: 16, height: 2, color: AppColors.warning.withValues(alpha: 0.5)),
                   const SizedBox(width: 6),
-                  Text('Recorde: ${profile.bestTrophies}', style: const TextStyle(color: Colors.white38, fontSize: 10)),
+                  Text('Recorde: ${profile.bestTrophies}', style: const TextStyle(color: AppColors.textDisabled, fontSize: 10)),
                 ],
               ),
             ),
@@ -297,7 +368,7 @@ class BattleStatsDashboard extends StatelessWidget {
                     ? '+${s.netTrophyChange} troféus no período'
                     : '${s.netTrophyChange} troféus no período',
                 style: TextStyle(
-                  color: s.netTrophyChange > 0 ? Colors.greenAccent : Colors.redAccent,
+                  color: s.netTrophyChange > 0 ? AppColors.successAccent : AppColors.errorAccent,
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
@@ -317,11 +388,11 @@ class BattleStatsDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('ANÁLISE DE COROAS', Icons.filter_tilt_shift, Colors.blueAccent),
+          _sectionTitle('ANÁLISE DE COROAS', Icons.filter_tilt_shift, AppColors.accent),
           const SizedBox(height: 4),
           Text(
             'Coroas médias: você ${s.avgPlayerCrowns} | adversário ${s.avgOpponentCrowns}',
-            style: const TextStyle(color: Colors.white54, fontSize: 11),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -344,7 +415,7 @@ class BattleStatsDashboard extends StatelessWidget {
                         if (i < 0 || i >= labels.length) return const SizedBox.shrink();
                         return Padding(
                           padding: const EdgeInsets.only(top: 4),
-                          child: Text(labels[i], style: const TextStyle(color: Colors.white38, fontSize: 9)),
+                          child: Text(labels[i], style: const TextStyle(color: AppColors.textDisabled, fontSize: 9)),
                         );
                       },
                     ),
@@ -357,13 +428,13 @@ class BattleStatsDashboard extends StatelessWidget {
                     barRods: [
                       BarChartRodData(
                         toY: s.playerCrownCounts[i].toDouble(),
-                        color: Colors.blueAccent,
+                        color: AppColors.accent,
                         width: 12,
                         borderRadius: BorderRadius.circular(3),
                       ),
                       BarChartRodData(
                         toY: s.opponentCrownCounts[i].toDouble(),
-                        color: Colors.redAccent.withValues(alpha: 0.6),
+                        color: AppColors.errorAccent.withValues(alpha: 0.6),
                         width: 12,
                         borderRadius: BorderRadius.circular(3),
                       ),
@@ -376,9 +447,9 @@ class BattleStatsDashboard extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              _legendDot(Colors.blueAccent, 'Suas coroas'),
+              _legendDot(AppColors.accent, 'Suas coroas'),
               const SizedBox(width: 16),
-              _legendDot(Colors.redAccent.withValues(alpha: 0.6), 'Coroas adversário'),
+              _legendDot(AppColors.errorAccent.withValues(alpha: 0.6), 'Coroas adversário'),
             ],
           ),
         ],
@@ -390,7 +461,7 @@ class BattleStatsDashboard extends StatelessWidget {
         children: [
           Container(width: 10, height: 10, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
         ],
       );
 
@@ -402,7 +473,7 @@ class BattleStatsDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('CARTAS MAIS USADAS', Icons.style, Colors.amber),
+          _sectionTitle('CARTAS MAIS USADAS', Icons.style, AppColors.primary),
           const SizedBox(height: 12),
           GridView.builder(
             shrinkWrap: true,
@@ -425,7 +496,7 @@ class BattleStatsDashboard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.black26,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.white12),
+                        border: Border.all(color: AppColors.borderMedium),
                       ),
                       child: CardImage(
                         url: entry.card.iconUrl,
@@ -439,7 +510,7 @@ class BattleStatsDashboard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.amber,
+                        color: AppColors.primary,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -470,7 +541,7 @@ class BattleStatsDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('DICAS PARA EVOLUIR', Icons.school, Colors.greenAccent),
+          _sectionTitle('DICAS PARA EVOLUIR', Icons.school, AppColors.successAccent),
           const SizedBox(height: 12),
           ...insights.map((insight) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -681,14 +752,14 @@ class _Stats {
         title: 'Taxa de vitória baixa',
         body: 'Com menos de 35% de vitórias, considere experimentar um deck do meta atual. Foque em um único arquétipo por pelo menos 20 batalhas antes de trocar.',
         icon: Icons.warning_amber,
-        color: Colors.redAccent,
+        color: AppColors.errorAccent,
       ));
     } else if (wr >= 0.55) {
       insights.add(const _Insight(
         title: 'Ótimo desempenho!',
         body: 'Win rate acima de 55% indica que você está dominando sua arena. Tente subir de nível — você está pronto para desafios maiores.',
         icon: Icons.rocket_launch,
-        color: Colors.greenAccent,
+        color: AppColors.successAccent,
       ));
     }
 
@@ -699,7 +770,7 @@ class _Stats {
         title: 'Problema defensivo',
         body: 'Você está perdendo muitos jogos com 3-0 (correu 3 torres). Isso indica dificuldade na defesa. Adicione ao seu deck: splash damage (Valkyrie, Wizard) ou defesas de área.',
         icon: Icons.shield,
-        color: Colors.orangeAccent,
+        color: AppColors.warning,
       ));
     }
 
@@ -710,7 +781,7 @@ class _Stats {
         title: 'Pressão ofensiva insuficiente',
         body: 'Em 25%+ das batalhas você não destrói nenhuma torre. Pratique pressionar a lane adversária logo após uma boa defesa — o contra-ataque é o momento mais forte.',
         icon: Icons.bolt,
-        color: Colors.amber,
+        color: AppColors.primary,
       ));
     }
 
@@ -720,14 +791,14 @@ class _Stats {
         title: 'Progresso de troféus estagnado',
         body: 'Seus troféus estão oscilando sem crescimento. Isso é normal — significa que está na faixa certa. Para subir: domine seu deck atual em vez de trocar frequentemente.',
         icon: Icons.swap_vert,
-        color: Colors.blueAccent,
+        color: AppColors.accent,
       ));
     } else if (netTrophyChange < -100) {
       insights.add(const _Insight(
         title: 'Queda de troféus detectada',
         body: 'Você perdeu muitos troféus recentemente. Considere: (1) Trocar de deck se o meta mudou, (2) Jogar menos quando estiver cansado, (3) Assistir replays de derrotas.',
         icon: Icons.trending_down,
-        color: Colors.redAccent,
+        color: AppColors.errorAccent,
       ));
     }
 
@@ -746,7 +817,7 @@ class _Stats {
         title: 'Adversários causam mais dano',
         body: 'Os adversários destroem mais torres que você em média. Foco: (1) Gerencie melhor o elixir — nunca fique com 10, (2) Defenda sempre antes de atacar, (3) Use o contra-ataque após a defesa.',
         icon: Icons.analytics,
-        color: Colors.purpleAccent,
+        color: AppColors.roleSupport,
       ));
     }
 

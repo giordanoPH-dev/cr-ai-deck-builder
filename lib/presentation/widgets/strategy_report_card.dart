@@ -5,12 +5,15 @@ import 'package:cr_ai_deck_builder/l10n/generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../domain/entities/ai_strategy_report.dart';
 import '../../domain/entities/card.dart';
+import '../../core/constants/app_colors.dart';
 
 class StrategyReportCard extends StatelessWidget {
   final AiStrategyReport report;
   final List<CrCard> playerCards;
   final VoidCallback? onReAnalyze;
   final VoidCallback? onSave;
+  final List<CrCard>? currentDeck;
+  final int battleCount;
 
   const StrategyReportCard({
     super.key,
@@ -18,6 +21,8 @@ class StrategyReportCard extends StatelessWidget {
     required this.playerCards,
     this.onReAnalyze,
     this.onSave,
+    this.currentDeck,
+    this.battleCount = 0,
   });
 
   @override
@@ -34,7 +39,7 @@ class StrategyReportCard extends StatelessWidget {
             icon: Icons.lightbulb_outline,
             title: l10n.archetypeExplanationTitle,
             content: report.archetypeExplanation!,
-            color: Colors.tealAccent,
+            color: AppColors.successAccent,
           ),
           const SizedBox(height: 12),
         ],
@@ -43,7 +48,7 @@ class StrategyReportCard extends StatelessWidget {
           icon: Icons.psychology,
           title: l10n.playstyleAnalysisTitle,
           content: report.playstyleAnalysis,
-          color: Colors.purpleAccent,
+          color: AppColors.roleSupport,
         ),
         const SizedBox(height: 12),
 
@@ -51,12 +56,14 @@ class StrategyReportCard extends StatelessWidget {
           icon: Icons.school,
           title: l10n.metaCoachingTitle,
           content: report.metaCoaching,
-          color: Colors.blueAccent,
+          color: AppColors.accent,
         ),
         const SizedBox(height: 12),
 
         _buildDeckGrid8(context),
         const SizedBox(height: 8),
+
+        _buildDeckComparison(context),
 
         if (report.deckBreakdown != null) ...[
           _buildDeckBreakdown(context),
@@ -71,7 +78,11 @@ class StrategyReportCard extends StatelessWidget {
           const SizedBox(height: 12),
         ],
 
-        if (report.deckLinkUrl.isNotEmpty)
+        _buildQualityIndicator(context),
+
+        if (report.deckLinkUrl.isNotEmpty) ...[
+          _buildNextSteps(context),
+          const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: report.deckLinkUrl));
@@ -81,7 +92,7 @@ class StrategyReportCard extends StatelessWidget {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.greenAccent,
+              backgroundColor: AppColors.success,
               foregroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
@@ -92,16 +103,17 @@ class StrategyReportCard extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
             ),
           ),
+        ],
 
         const SizedBox(height: 12),
 
         if (onReAnalyze != null)
           TextButton.icon(
             onPressed: onReAnalyze,
-            icon: const Icon(Icons.refresh, size: 16, color: Colors.amber),
+            icon: const Icon(Icons.refresh, size: 16, color: AppColors.primary),
             label: Text(
               l10n.reAnalyze,
-              style: const TextStyle(color: Colors.amber, fontSize: 12),
+              style: const TextStyle(color: AppColors.primary, fontSize: 12),
             ),
           ),
       ],
@@ -111,15 +123,15 @@ class StrategyReportCard extends StatelessWidget {
   Widget _buildConfidenceBar(BuildContext context) {
     final percentage = (report.confidenceScore * 100).toInt();
     final color = report.confidenceScore >= 0.7
-        ? Colors.greenAccent
+        ? AppColors.success
         : report.confidenceScore >= 0.4
-            ? Colors.amber
-            : Colors.redAccent;
+            ? AppColors.warning
+            : AppColors.error;
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.2),
+        color: AppColors.overlay,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -140,7 +152,7 @@ class StrategyReportCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: report.confidenceScore,
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                backgroundColor: AppColors.border,
                 valueColor: AlwaysStoppedAnimation(color),
                 minHeight: 6,
               ),
@@ -160,7 +172,7 @@ class StrategyReportCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.25),
+        color: AppColors.overlayMedium,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
@@ -186,7 +198,7 @@ class StrategyReportCard extends StatelessWidget {
           Text(
             content,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 13,
               height: 1.5,
             ),
@@ -203,21 +215,21 @@ class StrategyReportCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.25),
+        color: AppColors.overlayMedium,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.primaryBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.style, color: Colors.amber, size: 18),
+              const Icon(Icons.style, color: AppColors.primary, size: 18),
               const SizedBox(width: 8),
               Text(
                 AppLocalizations.of(context)!.suggestedDeckTitle,
                 style: const TextStyle(
-                  color: Colors.amber,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                   fontSize: 11,
                   letterSpacing: 1.0,
@@ -255,9 +267,9 @@ class StrategyReportCard extends StatelessWidget {
       onTap: () => _showCardDialog(context, card, name),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.black26,
+          color: AppColors.overlay,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white10),
+          border: Border.all(color: AppColors.border),
         ),
         child: Column(
           children: [
@@ -275,7 +287,7 @@ class StrategyReportCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 decoration: const BoxDecoration(
-                  color: Colors.amber,
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(7),
                     bottomRight: Radius.circular(7),
@@ -307,7 +319,7 @@ class StrategyReportCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               name,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+              style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
@@ -317,7 +329,7 @@ class StrategyReportCard extends StatelessWidget {
                   (card.level ?? '?').toString(),
                   (card.maxLevel ?? '?').toString(),
                 ),
-                style: const TextStyle(color: Colors.amber, fontSize: 13),
+                style: const TextStyle(color: AppColors.primary, fontSize: 13),
               ),
             ],
           ],
@@ -325,7 +337,124 @@ class StrategyReportCard extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK', style: TextStyle(color: Colors.amber)),
+            child: const Text('OK', style: TextStyle(color: AppColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Task 3: Deck comparison — shows which cards to add/remove vs current deck.
+  Widget _buildDeckComparison(BuildContext context) {
+    if (currentDeck == null || currentDeck!.isEmpty) return const SizedBox.shrink();
+
+    final suggestedNames = report.suggestedDeckNames.map((n) => n.toLowerCase()).toSet();
+    final currentNames = currentDeck!.map((c) => c.name.toLowerCase()).toSet();
+
+    final removedCards = currentDeck!
+        .where((c) => !suggestedNames.contains(c.name.toLowerCase()))
+        .map((c) => c.name)
+        .toList();
+
+    final addedCardNames = report.suggestedDeckNames
+        .where((n) => !currentNames.contains(n.toLowerCase()))
+        .toList();
+
+    if (removedCards.isEmpty && addedCardNames.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.success.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle_outline, color: AppColors.success, size: 14),
+              SizedBox(width: 6),
+              Text(
+                '✓ Deck atual já é o sugerido',
+                style: TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.overlay,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderMedium),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'MUDANÇAS SUGERIDAS',
+              style: TextStyle(
+                color: AppColors.textMuted,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (removedCards.isNotEmpty) ...[
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: removedCards.map((name) => _buildChangeChip(
+                  label: name,
+                  icon: Icons.remove_circle_outline,
+                  color: AppColors.error,
+                )).toList(),
+              ),
+              const SizedBox(height: 6),
+            ],
+            if (addedCardNames.isNotEmpty)
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: addedCardNames.map((name) => _buildChangeChip(
+                  label: name,
+                  icon: Icons.add_circle_outline,
+                  color: AppColors.success,
+                )).toList(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChangeChip({
+    required String label,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 12),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -337,21 +466,21 @@ class StrategyReportCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.25),
+        color: AppColors.overlayMedium,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.successAccent.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.military_tech, color: Colors.greenAccent, size: 18),
+              const Icon(Icons.military_tech, color: AppColors.successAccent, size: 18),
               const SizedBox(width: 8),
               Text(
                 l10n.battleGuideTitle,
                 style: const TextStyle(
-                  color: Colors.greenAccent,
+                  color: AppColors.successAccent,
                   fontWeight: FontWeight.bold,
                   fontSize: 11,
                   letterSpacing: 1.0,
@@ -389,7 +518,7 @@ class StrategyReportCard extends StatelessWidget {
         Text(
           title,
           style: const TextStyle(
-            color: Colors.white,
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
             fontSize: 12,
           ),
@@ -397,8 +526,8 @@ class StrategyReportCard extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           content,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.8),
+          style: const TextStyle(
+            color: AppColors.textSecondary,
             fontSize: 12,
             height: 1.4,
           ),
@@ -421,16 +550,16 @@ class StrategyReportCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.2),
+        color: AppColors.overlay,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
+        border: Border.all(color: AppColors.primaryBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             l10n.deckBreakdownTitle,
-            style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.0),
+            style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.0),
           ),
           const SizedBox(height: 8),
           ...roles.entries
@@ -442,12 +571,12 @@ class StrategyReportCard extends StatelessWidget {
                       children: [
                         SizedBox(
                           width: 90,
-                          child: Text(e.key, style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold)),
+                          child: Text(e.key, style: const TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.bold)),
                         ),
                         Expanded(
                           child: Text(
                             e.value!.join(', '),
-                            style: const TextStyle(color: Colors.white, fontSize: 10),
+                            style: const TextStyle(color: AppColors.textPrimary, fontSize: 10),
                           ),
                         ),
                       ],
@@ -463,21 +592,21 @@ class StrategyReportCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.25),
+        color: AppColors.overlayMedium,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.accentBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.compare_arrows, color: Colors.blueAccent, size: 18),
+              const Icon(Icons.compare_arrows, color: AppColors.accent, size: 18),
               const SizedBox(width: 8),
               Text(
                 l10n.matchupTipsTitle,
                 style: const TextStyle(
-                  color: Colors.blueAccent,
+                  color: AppColors.accent,
                   fontWeight: FontWeight.bold,
                   fontSize: 11,
                   letterSpacing: 1.0,
@@ -494,25 +623,115 @@ class StrategyReportCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.blueAccent.withValues(alpha: 0.15),
+                        color: AppColors.accentDim,
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+                        border: Border.all(color: AppColors.accentBorder),
                       ),
                       child: Text(
                         '${l10n.vsLabel} ${tip.enemyArchetype}',
-                        style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 10),
+                        style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold, fontSize: 10),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       tip.tip,
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12, height: 1.4),
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
                     ),
                   ],
                 ),
               )),
         ],
       ),
+    );
+  }
+
+  /// Task 4: Analysis quality indicator based on battle count.
+  Widget _buildQualityIndicator(BuildContext context) {
+    if (battleCount == 0) return const SizedBox.shrink();
+
+    final bool fewBattles = battleCount < 5;
+    final Color iconColor = fewBattles ? AppColors.warning : AppColors.success;
+    final IconData iconData = fewBattles ? Icons.warning_amber_rounded : Icons.check_circle_outline;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(iconData, color: iconColor, size: 14),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              fewBattles
+                  ? 'Poucas batalhas — análise menos precisa ($battleCount batalhas)'
+                  : 'Análise baseada em $battleCount batalhas recentes',
+              style: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 11,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Task 5: Next steps hints before the import button.
+  Widget _buildNextSteps(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.overlay,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.borderMedium),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'PRÓXIMOS PASSOS',
+              style: TextStyle(
+                color: AppColors.textMuted,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildNextStepRow(
+              icon: Icons.menu_book_outlined,
+              text: 'Estude o Guia de Batalha acima para dominar o deck',
+            ),
+            const SizedBox(height: 6),
+            _buildNextStepRow(
+              icon: Icons.upload_rounded,
+              text: 'Importe o deck abaixo e jogue algumas batalhas para nova análise',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNextStepRow({required IconData icon, required String text}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: AppColors.textMuted, size: 14),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

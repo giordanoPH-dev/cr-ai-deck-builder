@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/constants/app_colors.dart';
 import '../../core/error/failures.dart';
 
 /// Reusable error display widget that renders typed [Failure] objects
@@ -33,7 +35,7 @@ class ErrorDisplayWidget extends StatelessWidget {
             Text(
               _getTitle(),
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
@@ -42,8 +44,8 @@ class ErrorDisplayWidget extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               failure.message,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
                 fontSize: 13,
                 height: 1.4,
               ),
@@ -54,7 +56,7 @@ class ErrorDisplayWidget extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.black87,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -88,13 +90,13 @@ class ErrorDisplayWidget extends StatelessWidget {
 
   Color _getColor() {
     return switch (failure) {
-      NetworkFailure() => Colors.orangeAccent,
-      PlayerNotFoundFailure() => Colors.amber,
-      ServerFailure() => Colors.redAccent,
-      LlmFailure() => Colors.purpleAccent,
-      CacheFailure() => Colors.blueGrey,
-      DatabaseFailure() => Colors.redAccent,
-      UnknownFailure() => Colors.redAccent,
+      NetworkFailure() => AppColors.warning,
+      PlayerNotFoundFailure() => AppColors.primary,
+      ServerFailure() => AppColors.error,
+      LlmFailure() => AppColors.roleSupport,
+      CacheFailure() => AppColors.roleDefault,
+      DatabaseFailure() => AppColors.error,
+      UnknownFailure() => AppColors.error,
     };
   }
 
@@ -127,13 +129,13 @@ class InlineErrorWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha: 0.15),
+        color: AppColors.error.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+          const Icon(Icons.error_outline, color: AppColors.errorAccent, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -147,7 +149,7 @@ class InlineErrorWidget extends StatelessWidget {
           ),
           if (onRetry != null)
             IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.amber, size: 18),
+              icon: const Icon(Icons.refresh, color: AppColors.primary, size: 18),
               onPressed: onRetry,
               visualDensity: VisualDensity.compact,
             ),
