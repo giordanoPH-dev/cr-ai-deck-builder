@@ -55,7 +55,7 @@ class CardGuideSheet extends StatelessWidget {
                         _CardNameList(
                           label: 'Sinergias',
                           icon: Icons.favorite,
-                          color: Colors.greenAccent,
+                          color: AppColors.successAccent,
                           cardNames: guide.synergies,
                           onTap: (name) => _openCardByName(context, name),
                         ),
@@ -64,7 +64,7 @@ class CardGuideSheet extends StatelessWidget {
                         _CardNameList(
                           label: 'Counters',
                           icon: Icons.shield,
-                          color: Colors.redAccent,
+                          color: AppColors.errorAccent,
                           cardNames: guide.counters,
                           onTap: (name) => _openCardByName(context, name),
                         ),

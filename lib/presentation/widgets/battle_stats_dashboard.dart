@@ -30,8 +30,6 @@ class BattleStatsDashboard extends StatelessWidget {
       children: [
         _buildPlayerStatsHeader(s),
         const SizedBox(height: 16),
-        _buildRecentFormSection(),
-        const SizedBox(height: 16),
         _buildWinRateSection(s),
         const SizedBox(height: 16),
         _buildTrophyProgressionSection(s),
@@ -41,6 +39,8 @@ class BattleStatsDashboard extends StatelessWidget {
         _buildTopCardsSection(s),
         const SizedBox(height: 16),
         _buildInsightsSection(s),
+        const SizedBox(height: 16),
+        _buildWinRateTrendSection(battles),
         const SizedBox(height: 8),
       ],
     );
@@ -79,74 +79,6 @@ class BattleStatsDashboard extends StatelessWidget {
     );
   }
 
-  // ── Recent form ───────────────────────────────────────────────────
-  Widget _buildRecentFormSection() {
-    final recent = battles.take(10).toList();
-    if (recent.isEmpty) return const SizedBox.shrink();
-
-    return _Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionTitle('FORMA RECENTE', Icons.timeline, AppColors.accent),
-          const SizedBox(height: 12),
-          Row(
-            children: recent.map((battle) {
-              final tc = battle.team.isNotEmpty ? battle.team.first.crowns : 0;
-              final oc = battle.opponent.isNotEmpty ? battle.opponent.first.crowns : 0;
-              final isWin = tc > oc;
-              final isDraw = tc == oc;
-              final color = isWin
-                  ? AppColors.successAccent
-                  : (isDraw ? AppColors.textDisabled : AppColors.errorAccent);
-              final label = isWin ? 'V' : (isDraw ? 'E' : 'D');
-              final delta = battle.team.isNotEmpty ? battle.team.first.trophyChange : null;
-
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: Column(
-                    children: [
-                      Container(
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: color.withValues(alpha: 0.6), width: 1.5),
-                        ),
-                        child: Center(
-                          child: Text(
-                            label,
-                            style: TextStyle(
-                              color: color,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (delta != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          delta >= 0 ? '+$delta' : '$delta',
-                          style: TextStyle(
-                            color: delta >= 0 ? AppColors.successAccent : AppColors.errorAccent,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _statTile(String label, String value, IconData icon, Color color) {
     return Column(
       children: [
@@ -169,7 +101,7 @@ class BattleStatsDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('RESULTADO DAS BATALHAS', Icons.pie_chart, AppColors.roleSupport),
+          _sectionTitle('RESULTADO DAS BATALHAS', Icons.pie_chart, AppColors.accent),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -246,7 +178,7 @@ class BattleStatsDashboard extends StatelessWidget {
       children: [
         Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 8),
-        Text('$label: $count ($pct%)', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+        Text('$label: $count ($pct%)', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
       ],
     );
   }
@@ -292,7 +224,7 @@ class BattleStatsDashboard extends StatelessWidget {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  getDrawingHorizontalLine: (_) => FlLine(color: Colors.white10, strokeWidth: 1),
+                  getDrawingHorizontalLine: (_) => FlLine(color: AppColors.border, strokeWidth: 1),
                 ),
                 titlesData: FlTitlesData(
                   topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -556,13 +488,63 @@ class BattleStatsDashboard extends StatelessWidget {
                         children: [
                           Text(insight.title, style: TextStyle(color: insight.color, fontWeight: FontWeight.bold, fontSize: 12)),
                           const SizedBox(height: 2),
-                          Text(insight.body, style: const TextStyle(color: Colors.white70, fontSize: 11, height: 1.4)),
+                          Text(insight.body, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, height: 1.4)),
                         ],
                       ),
                     ),
                   ],
                 ),
               )),
+        ],
+      ),
+    );
+  }
+
+  // ── Win-rate trend sparkline ──────────────────────────────────────
+  Widget _buildWinRateTrendSection(List<CrBattle> battles) {
+    if (battles.length < 5) return const SizedBox.shrink();
+
+    // Compute rolling 5-battle win rates (index i covers battles[i-4..i])
+    final dots = <Color>[];
+    for (int i = 4; i < battles.length; i++) {
+      int wins = 0;
+      for (int j = i - 4; j <= i; j++) {
+        final teamP = battles[j].team.isNotEmpty ? battles[j].team.first : null;
+        final oppP = battles[j].opponent.isNotEmpty ? battles[j].opponent.first : null;
+        final tc = teamP?.crowns ?? 0;
+        final oc = oppP?.crowns ?? 0;
+        if (tc > oc) wins++;
+      }
+      final wr = wins / 5;
+      if (wr >= 0.6) {
+        dots.add(AppColors.battleVictory);
+      } else if (wr >= 0.4) {
+        dots.add(AppColors.battleDraw);
+      } else {
+        dots.add(AppColors.battleDefeat);
+      }
+    }
+
+    return _Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle('TENDÊNCIA', Icons.show_chart, AppColors.primary),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: dots.map((color) {
+              return Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+              );
+            }).toList(),
+          ),
         ],
       ),
     );
@@ -591,7 +573,7 @@ class _Card extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.25),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+          border: Border.all(color: AppColors.border),
         ),
         child: child,
       );
@@ -817,7 +799,7 @@ class _Stats {
         title: 'Adversários causam mais dano',
         body: 'Os adversários destroem mais torres que você em média. Foco: (1) Gerencie melhor o elixir — nunca fique com 10, (2) Defenda sempre antes de atacar, (3) Use o contra-ataque após a defesa.',
         icon: Icons.analytics,
-        color: AppColors.roleSupport,
+        color: AppColors.accent,
       ));
     }
 

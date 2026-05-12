@@ -141,7 +141,7 @@ class InlineErrorWidget extends StatelessWidget {
             child: Text(
               failure.message,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textPrimary,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),

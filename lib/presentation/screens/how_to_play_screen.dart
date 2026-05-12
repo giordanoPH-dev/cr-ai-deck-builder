@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/constants/app_colors.dart';
 import '../../domain/entities/ai_strategy_report.dart';
 
@@ -16,12 +17,12 @@ class HowToPlayScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final phases = _buildPhases();
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: const Color(0xFF0D1B4B),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -56,7 +57,7 @@ class HowToPlayScreen extends StatelessWidget {
           end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primaryBorder),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
@@ -93,7 +94,7 @@ class HowToPlayScreen extends StatelessWidget {
         icon: Icons.play_circle_outline,
         title: 'ABERTURA',
         content: opening,
-        color: AppColors.success,
+        color: AppColors.successAccent,
       ));
     }
 
@@ -102,7 +103,7 @@ class HowToPlayScreen extends StatelessWidget {
         icon: Icons.water_drop,
         title: 'GESTÃO DE ELIXIR',
         content: guide.elixirManagement!,
-        color: AppColors.roleSupport,
+        color: const Color(0xFFCE93D8),
         assetIcon: 'assets/images/ui_icons/elixir.png',
       ));
     }
@@ -142,7 +143,7 @@ class HowToPlayScreen extends StatelessWidget {
         icon: Icons.warning_amber_rounded,
         title: 'ERROS COMUNS',
         content: guide.commonMistakes!,
-        color: AppColors.error,
+        color: AppColors.errorAccent,
       ));
     }
 
@@ -153,7 +154,7 @@ class HowToPlayScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: Colors.black.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: phase.color.withValues(alpha: 0.35)),
       ),

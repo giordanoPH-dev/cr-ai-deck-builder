@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cr_ai_deck_builder/l10n/generated/app_localizations.dart';
+import 'core/constants/app_colors.dart';
 import 'core/di/injection_container.dart';
 import 'presentation/blocs/player/player_cubit.dart';
 import 'presentation/blocs/ai_strategy/ai_strategy_cubit.dart';
@@ -33,7 +34,7 @@ class App extends StatelessWidget {
         theme: ThemeData(
           fontFamily: 'Clash',
           colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blueAccent,
+            seedColor: AppColors.accent,
             brightness: Brightness.dark,
           ),
           textTheme: Typography.material2021().white.apply(fontFamily: 'Clash'),
@@ -48,16 +49,16 @@ class App extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+                    const Icon(Icons.error_outline, color: AppColors.errorAccent, size: 48),
                     const SizedBox(height: 16),
                     const Text(
                       'Algo deu errado',
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Reinicie o aplicativo.',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
+                      style: TextStyle(color: AppColors.textPrimary.withValues(alpha: 0.7), fontSize: 13),
                     ),
                   ],
                 ),

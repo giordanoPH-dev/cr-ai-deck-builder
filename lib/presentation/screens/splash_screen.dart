@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../blocs/ai_strategy/ai_strategy_cubit.dart';
 import '../blocs/player/player_cubit.dart';
@@ -227,7 +228,7 @@ class _SplashScreenState extends State<SplashScreen>
                         child: const Text(
                           'ROYALE COACH',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 5,
@@ -244,7 +245,7 @@ class _SplashScreenState extends State<SplashScreen>
                       child: const Text(
                         'by BitmageDev',
                         style: TextStyle(
-                          color: Colors.white54,
+                          color: AppColors.textMuted,
                           fontSize: 13,
                           letterSpacing: 2.5,
                           fontWeight: FontWeight.w300,

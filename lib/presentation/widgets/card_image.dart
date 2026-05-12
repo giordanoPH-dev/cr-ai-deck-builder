@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+
+import '../../core/constants/app_colors.dart';
+import 'skeleton_widgets.dart';
 
 class CardImage extends StatelessWidget {
   final String url;
@@ -28,9 +30,7 @@ class CardImage extends StatelessWidget {
       height: size,
       loadingBuilder: (_, child, progress) {
         if (progress == null) return child;
-        return const Center(
-          child: SpinKitPulse(color: Colors.white24, size: 16),
-        );
+        return ShimmerBox(width: size ?? 40, height: size ?? 40, borderRadius: 6);
       },
       errorBuilder: (context, error, stackTrace) {
         debugPrint(
@@ -49,7 +49,7 @@ class CardImage extends StatelessWidget {
       child: Text(
         initials,
         style: TextStyle(
-          color: Colors.white38,
+          color: AppColors.textDisabled,
           fontSize: (size ?? 24) * 0.4,
           fontWeight: FontWeight.bold,
         ),

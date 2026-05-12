@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
+import '../../core/constants/app_colors.dart';
 
 class NativeAdWidget extends StatefulWidget {
   final String adUnitId;
@@ -33,21 +35,21 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
         cornerRadius: 16.0,
         callToActionTextStyle: NativeTemplateTextStyle(
             textColor: Colors.black,
-            backgroundColor: Colors.amber,
+            backgroundColor: AppColors.primary,
             style: NativeTemplateFontStyle.bold,
             size: 16.0),
         primaryTextStyle: NativeTemplateTextStyle(
-            textColor: Colors.white,
+            textColor: AppColors.textPrimary,
             backgroundColor: Colors.transparent,
             style: NativeTemplateFontStyle.bold,
             size: 16.0),
         secondaryTextStyle: NativeTemplateTextStyle(
-            textColor: Colors.white70,
+            textColor: AppColors.textSecondary,
             backgroundColor: Colors.transparent,
             style: NativeTemplateFontStyle.normal,
             size: 14.0),
         tertiaryTextStyle: NativeTemplateTextStyle(
-            textColor: Colors.white54,
+            textColor: AppColors.textMuted,
             backgroundColor: Colors.transparent,
             style: NativeTemplateFontStyle.normal,
             size: 12.0),
