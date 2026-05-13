@@ -233,6 +233,67 @@ class AppLocalizationsPt extends AppLocalizations {
   String get archetypeBait => 'Isca';
 
   @override
+  String get archetypeBridgeSpam => 'Bridge Spam';
+
+  @override
+  String get archetypeLavaLoon => 'LavaBalão';
+
+  @override
+  String get archetypeMinerPoison => 'Minerador';
+
+  @override
+  String get archetypeGraveyard => 'Cemitério';
+
+  @override
+  String get archetypeHybrid => 'Híbrido';
+
+  @override
+  String get archetypeBeatdownDesc =>
+      'Empurradas lentas com tanques poderosos. Acumule força e avance com pressão esmagadora.';
+
+  @override
+  String get archetypeControlDesc =>
+      'Defenda eficientemente e explore os erros do oponente com contra-ataques cirúrgicos.';
+
+  @override
+  String get archetypeCycleDesc =>
+      'Cartas baratas para ciclar rapidamente. Repita sua condição de vitória antes do oponente se preparar.';
+
+  @override
+  String get archetypeSiegeDesc =>
+      'Use construções como X-Bow ou Morteiro para atacar a torre sem entrar em combate direto.';
+
+  @override
+  String get archetypeBaitDesc =>
+      'Force o oponente a usar os feitiços errados, criando vantagem com cartas que ele não pode ignorar.';
+
+  @override
+  String get archetypeBridgeSpamDesc =>
+      'Pressão constante e imediata na ponte. Decks rápidos e agressivos que sobrecarregam antes da defesa se organizar.';
+
+  @override
+  String get archetypeLavaLoonDesc =>
+      'Combinação aérea letal: Lavador de Lava absorve dano enquanto o Balão destroça as torres.';
+
+  @override
+  String get archetypeMinerPoisonDesc =>
+      'Chip damage constante com Minerador e Veneno. O dano acumulado vence pelo cansaço do oponente.';
+
+  @override
+  String get archetypeGraveyardDesc =>
+      'Invoque esqueletos diretamente na torre inimiga com o feitiço Cemitério para vencer pelo chip damage.';
+
+  @override
+  String get archetypeHybridDesc =>
+      'Mistura equilibrada de ataque e defesa, adaptável a diversas situações e oponentes.';
+
+  @override
+  String get chooseArchetypeTitle => 'Escolha o tipo de deck';
+
+  @override
+  String get deckChangedWarning => 'Deck alterado desde a análise';
+
+  @override
   String get chooseArchetypeLabel => 'Escolha sua estratégia:';
 
   @override
@@ -240,4 +301,39 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get openClashRoyale => 'ABRIR CLASH ROYALE';
+
+  @override
+  String get tabAi => 'IA';
+
+  @override
+  String get elixirAverageLabel => 'elixir médio';
+
+  @override
+  String get howToPlayLabel => 'COMO JOGAR';
+
+  @override
+  String get strengthsLabel => 'PONTOS FORTES';
+
+  @override
+  String get weaknessesLabel => 'PONTOS FRACOS';
+
+  @override
+  String get suggestedSwapLabel => 'TROCA SUGERIDA';
+
+  @override
+  String get shareDeckButton => 'Compartilhar Deck';
+
+  @override
+  String get currentDeckAnalysisTitle => 'ANÁLISE DO DECK ATUAL';
+
+  @override
+  String get copyLinkLabel => 'Copiar link';
+
+  @override
+  String get reanalyzeWatchVideo => 'Reanalisar (assistir vídeo)';
+
+  @override
+  String analysisSavedAt(String date) {
+    return 'Análise salva em $date';
+  }
 }

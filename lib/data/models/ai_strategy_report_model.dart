@@ -128,9 +128,7 @@ class AiStrategyReportModel extends AiStrategyReport {
     }
 
     // Build deck link
-    final deckLink = deckIds.isNotEmpty
-        ? '${AppConstants.deckLinkBaseUrl}${deckIds.join(';')}'
-        : '';
+    final deckLink = deckIds.isNotEmpty ? AppConstants.buildDeckUrl(deckIds) : '';
 
     return AiStrategyReportModel(
       playstyleAnalysis: _safeString(json['playstyle_analysis']),

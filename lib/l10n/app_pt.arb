@@ -100,7 +100,43 @@
   "archetypeCycle": "Ciclo",
   "archetypeSiege": "Cerco",
   "archetypeBait": "Isca",
+  "archetypeBridgeSpam": "Bridge Spam",
+  "archetypeLavaLoon": "LavaBalão",
+  "archetypeMinerPoison": "Minerador",
+  "archetypeGraveyard": "Cemitério",
+  "archetypeHybrid": "Híbrido",
+
+  "archetypeBeatdownDesc": "Empurradas lentas com tanques poderosos. Acumule força e avance com pressão esmagadora.",
+  "archetypeControlDesc": "Defenda eficientemente e explore os erros do oponente com contra-ataques cirúrgicos.",
+  "archetypeCycleDesc": "Cartas baratas para ciclar rapidamente. Repita sua condição de vitória antes do oponente se preparar.",
+  "archetypeSiegeDesc": "Use construções como X-Bow ou Morteiro para atacar a torre sem entrar em combate direto.",
+  "archetypeBaitDesc": "Force o oponente a usar os feitiços errados, criando vantagem com cartas que ele não pode ignorar.",
+  "archetypeBridgeSpamDesc": "Pressão constante e imediata na ponte. Decks rápidos e agressivos que sobrecarregam antes da defesa se organizar.",
+  "archetypeLavaLoonDesc": "Combinação aérea letal: Lavador de Lava absorve dano enquanto o Balão destroça as torres.",
+  "archetypeMinerPoisonDesc": "Chip damage constante com Minerador e Veneno. O dano acumulado vence pelo cansaço do oponente.",
+  "archetypeGraveyardDesc": "Invoque esqueletos diretamente na torre inimiga com o feitiço Cemitério para vencer pelo chip damage.",
+  "archetypeHybridDesc": "Mistura equilibrada de ataque e defesa, adaptável a diversas situações e oponentes.",
+
+  "chooseArchetypeTitle": "Escolha o tipo de deck",
+  "deckChangedWarning": "Deck alterado desde a análise",
   "chooseArchetypeLabel": "Escolha sua estratégia:",
   "currentArenaLabel": "Arena atual",
-  "openClashRoyale": "ABRIR CLASH ROYALE"
+  "openClashRoyale": "ABRIR CLASH ROYALE",
+
+  "tabAi": "IA",
+  "elixirAverageLabel": "elixir médio",
+  "howToPlayLabel": "COMO JOGAR",
+  "strengthsLabel": "PONTOS FORTES",
+  "weaknessesLabel": "PONTOS FRACOS",
+  "suggestedSwapLabel": "TROCA SUGERIDA",
+  "shareDeckButton": "Compartilhar Deck",
+  "currentDeckAnalysisTitle": "ANÁLISE DO DECK ATUAL",
+  "copyLinkLabel": "Copiar link",
+  "reanalyzeWatchVideo": "Reanalisar (assistir vídeo)",
+  "analysisSavedAt": "Análise salva em {date}",
+  "@analysisSavedAt": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  }
 }

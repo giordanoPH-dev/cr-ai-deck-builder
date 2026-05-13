@@ -100,7 +100,43 @@
   "archetypeCycle": "Cycle",
   "archetypeSiege": "Siege",
   "archetypeBait": "Bait",
+  "archetypeBridgeSpam": "Bridge Spam",
+  "archetypeLavaLoon": "LavaLoon",
+  "archetypeMinerPoison": "Miner Poison",
+  "archetypeGraveyard": "Graveyard",
+  "archetypeHybrid": "Hybrid",
+
+  "archetypeBeatdownDesc": "Slow pushes with powerful tanks. Build momentum and advance with overwhelming force.",
+  "archetypeControlDesc": "Defend efficiently and exploit your opponent's mistakes with surgical counter-attacks.",
+  "archetypeCycleDesc": "Cheap cards to cycle quickly. Repeat your win condition before the opponent can prepare.",
+  "archetypeSiegeDesc": "Use buildings like X-Bow or Mortar to attack the tower without direct combat.",
+  "archetypeBaitDesc": "Force the opponent to use the wrong spells, gaining advantage with cards they can't ignore.",
+  "archetypeBridgeSpamDesc": "Constant immediate pressure at the bridge. Fast, aggressive decks that overwhelm before defenses are ready.",
+  "archetypeLavaLoonDesc": "Lethal aerial combo: Lava Hound absorbs damage while the Balloon destroys towers.",
+  "archetypeMinerPoisonDesc": "Constant chip damage with Miner and Poison. Accumulated damage wins by attrition.",
+  "archetypeGraveyardDesc": "Summon skeletons directly on the enemy tower with the Graveyard spell to win through chip damage.",
+  "archetypeHybridDesc": "Balanced mix of attack and defense, adaptable to various situations and opponents.",
+
+  "chooseArchetypeTitle": "Choose deck type",
+  "deckChangedWarning": "Deck changed since analysis",
   "chooseArchetypeLabel": "Choose your strategy:",
   "currentArenaLabel": "Current arena",
-  "openClashRoyale": "OPEN CLASH ROYALE"
+  "openClashRoyale": "OPEN CLASH ROYALE",
+
+  "tabAi": "AI",
+  "elixirAverageLabel": "avg elixir",
+  "howToPlayLabel": "HOW TO PLAY",
+  "strengthsLabel": "STRENGTHS",
+  "weaknessesLabel": "WEAKNESSES",
+  "suggestedSwapLabel": "SUGGESTED SWAP",
+  "shareDeckButton": "Share Deck",
+  "currentDeckAnalysisTitle": "CURRENT DECK ANALYSIS",
+  "copyLinkLabel": "Copy link",
+  "reanalyzeWatchVideo": "Re-analyze (watch video)",
+  "analysisSavedAt": "Analysis saved on {date}",
+  "@analysisSavedAt": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  }
 }

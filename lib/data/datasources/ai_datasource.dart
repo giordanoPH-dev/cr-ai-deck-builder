@@ -401,7 +401,8 @@ class AiDatasourceImpl implements AiDatasource {
         if (rawText == null || rawText.isEmpty) {
           throw const LlmException(message: 'Empty response from Gemini');
         }
-        return FullAnalysisReportModel.fromLlmResponse(rawText);
+        return FullAnalysisReportModel.fromLlmResponse(rawText)
+            .withDeckIds(profile.currentDeck.map((c) => c.id).toList());
       } on LlmException {
         rethrow;
       } catch (e) {

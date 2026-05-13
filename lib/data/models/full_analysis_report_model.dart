@@ -8,6 +8,7 @@ class FullAnalysisReportModel extends FullAnalysisReport {
   const FullAnalysisReportModel({
     required super.strategy,
     required super.deckAnalysis,
+    super.analyzedDeckIds = const [],
   });
 
   factory FullAnalysisReportModel.fromLlmResponse(String rawResponse) {
@@ -53,11 +54,24 @@ class FullAnalysisReportModel extends FullAnalysisReport {
           json['strategy'] as Map<String, dynamic>),
       deckAnalysis: DeckAnalysisReportModel.fromParsedJson(
           json['deck_analysis'] as Map<String, dynamic>),
+      analyzedDeckIds: (json['analyzed_deck_ids'] as List?)
+              ?.map((e) => e as int)
+              .toList() ??
+          [],
     );
   }
 
   Map<String, dynamic> toJson() => {
         'strategy': (strategy as AiStrategyReportModel).toJson(),
         'deck_analysis': (deckAnalysis as DeckAnalysisReportModel).toJson(),
+        'analyzed_deck_ids': analyzedDeckIds,
       };
+
+  FullAnalysisReportModel withDeckIds(List<int> deckIds) {
+    return FullAnalysisReportModel(
+      strategy: strategy,
+      deckAnalysis: deckAnalysis,
+      analyzedDeckIds: deckIds,
+    );
+  }
 }

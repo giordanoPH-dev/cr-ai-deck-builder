@@ -45,9 +45,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  _SortBy _sortBy = _SortBy.level;
   String _selectedArchetype = 'Beatdown';
-  bool _headerExpanded = false;
+  int _currentIndex = 0;
+  bool _profileSheetOpen = false;
 
   @override
   void initState() {
@@ -55,10 +55,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final playerState = context.read<PlayerCubit>().state;
       final aiState = context.read<AiStrategyCubit>().state;
-      // Only restore from cache if player is already loaded AND no analysis
-      // is in flight yet (SplashScreen may have already triggered the restore).
-      if (playerState is PlayerLoaded && aiState is AiStrategyInitial) {
-        context.read<AiStrategyCubit>().loadSavedAnalysis(playerState.profile.tag);
+      if (playerState is PlayerLoaded) {
+        context.read<SavedStrategiesCubit>().fetchSavedStrategies(playerState.profile.tag);
+        final deckIds = playerState.profile.currentDeck.map((c) => c.id).toList();
+        if (aiState is AiStrategyInitial) {
+          // No analysis loaded yet — load from cache, auto-clearing if deck changed.
+          context.read<AiStrategyCubit>().loadSavedAnalysis(
+            playerState.profile.tag,
+            currentDeckIds: deckIds,
+          );
+        } else if (aiState is FullAnalysisLoaded) {
+          // Already loaded from splash — validate it matches the current deck.
+          context.read<AiStrategyCubit>().validateDeckConsistency(
+            playerState.profile.tag,
+            deckIds,
+          );
+        }
       }
     });
   }
@@ -91,170 +103,110 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final profile = playerState.profile;
         final battleLog = playerState.battles;
 
-        // Fetch saved strategies when the profile is loaded
-        context.read<SavedStrategiesCubit>().fetchSavedStrategies(profile.tag);
-
-        return DefaultTabController(
-          length: 5,
-          child: Scaffold(
-            backgroundColor: AppColors.surface,
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              title: Text(
-                profile.name.toUpperCase(),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
+        return Scaffold(
+          backgroundColor: AppColors.surface,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: GestureDetector(
+              onTap: () => _showProfileSheet(context, profile),
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    profile.name.toUpperCase(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  AnimatedRotation(
+                    turns: _profileSheetOpen ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.textMuted),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () =>
+                    context.read<PlayerCubit>().fetchPlayer(profile.tag),
+              ),
+            ],
+          ),
+          body: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Column(
+                children: [
+                  if (playerState.isFromCache)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+                      child: OfflineBannerWidget(isOffline: true),
+                    ),
+                  if (battleLog.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      child: StreakWidget(battles: battleLog),
+                    ),
+                  Expanded(
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      child: IndexedStack(
+                        index: _currentIndex,
+                        children: [
+                          _buildAnalysisTab(context, profile, battleLog),
+                          _buildDeck8Grid(
+                            context,
+                            profile.currentDeck,
+                            profile: profile,
+                            battleLog: battleLog,
+                          ),
+                          _CardGridTab(cards: profile.cards, emptyMessage: l10n.cardsNotFound),
+                          _buildHistoryTab(context, battleLog),
+                          _buildStatsTab(context, profile, battleLog),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          bottomNavigationBar: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DecoratedBox(
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: AppColors.borderMedium, width: 0.5),
+                  ),
+                ),
+                child: NavigationBar(
+                  selectedIndex: _currentIndex,
+                  onDestinationSelected: (i) => setState(() => _currentIndex = i),
+                  backgroundColor: AppColors.surface,
+                  indicatorColor: AppColors.primary.withValues(alpha: 0.15),
+                  height: 65,
+                  labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                  destinations: [
+                    NavigationDestination(icon: const Icon(Icons.auto_awesome), label: AppLocalizations.of(context)!.tabAi),
+                    NavigationDestination(icon: const Icon(Icons.style), label: AppLocalizations.of(context)!.tabDeck),
+                    NavigationDestination(icon: const Icon(Icons.grid_view), label: AppLocalizations.of(context)!.tabCards),
+                    NavigationDestination(icon: const Icon(Icons.history), label: AppLocalizations.of(context)!.tabBattles),
+                    NavigationDestination(icon: const Icon(Icons.bar_chart), label: AppLocalizations.of(context)!.tabStats),
+                  ],
                 ),
               ),
-              actions: [
-                if (playerState.isFromCache)
-                  Builder(
-                    builder: (ctx) {
-                      final l10n = AppLocalizations.of(ctx)!;
-                      return Tooltip(
-                        message: l10n.cacheTooltip,
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.warning.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.cloud_off,
-                                size: 14,
-                                color: AppColors.warning,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                l10n.offlineBadge,
-                                style: const TextStyle(
-                                  fontSize: 9,
-                                  color: AppColors.warning,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: () =>
-                      context.read<PlayerCubit>().fetchPlayer(profile.tag),
-                ),
-              ],
-            ),
-            body: Column(
-              children: [
-                _buildProfileHeader(context, profile),
-                if (playerState.isFromCache)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
-                    child: OfflineBannerWidget(isOffline: true),
-                  ),
-                if (battleLog.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    child: StreakWidget(battles: battleLog),
-                  ),
-                Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return TabBar(
-                      labelColor: AppColors.primary,
-                      unselectedLabelColor: AppColors.textSecondary,
-                      indicatorColor: AppColors.primary,
-                      indicatorWeight: 3,
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
-                      ),
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.center,
-                      tabs: [
-                        const Tab(
-                          text: 'IA',
-                          icon: Icon(Icons.auto_awesome, size: 18),
-                        ),
-                        Tab(
-                          text: l10n.tabDeck,
-                          icon: const Icon(Icons.style, size: 18),
-                        ),
-                        Tab(
-                          text: l10n.tabCards,
-                          icon: const Icon(Icons.grid_view, size: 18),
-                        ),
-                        Tab(
-                          text: l10n.tabBattles,
-                          icon: const Icon(Icons.history, size: 18),
-                        ),
-                        Tab(
-                          text: l10n.tabStats,
-                          icon: const Icon(Icons.bar_chart, size: 18),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                Expanded(
-                  child: Container(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    child: Builder(
-                      builder: (context) {
-                        final l10n = AppLocalizations.of(context)!;
-                        return TabBarView(
-                          children: [
-                            _buildAnalysisTab(context, profile, battleLog),
-                            _buildDeck8Grid(
-                              context,
-                              profile.currentDeck,
-                              profile: profile,
-                              battleLog: battleLog,
-                            ),
-                            _buildCardGrid(
-                              context,
-                              profile.cards,
-                              emptyMessage: l10n.cardsNotFound,
-                            ),
-                            _buildHistoryTab(context, battleLog),
-                            _buildStatsTab(context, profile, battleLog),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 8,
-                  ),
-                  color: Colors.black.withValues(alpha: 0.3),
-                  child: Text(
-                    AppLocalizations.of(context)!.disclaimerText,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.textDisabled,
-                      fontSize: 8,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            bottomNavigationBar: const BannerAdWidget(adUnitId: 'ca-app-pub-8273819403150038/5940370812'),
+              SafeArea(
+                top: false,
+                child: const BannerAdWidget(adUnitId: 'ca-app-pub-8273819403150038/5940370812'),
+              ),
+            ],
           ),
         );
       },
@@ -267,14 +219,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     List<CrBattle> battleLog,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    // (internalKey, displayLabel, icon) — key stays English for AI prompt
-    final archetypes = [
-      ('Beatdown', l10n.archetypeBeatdown, Icons.bolt),
-      ('Control', l10n.archetypeControl, Icons.shield),
-      ('Cycle', l10n.archetypeCycle, Icons.loop),
-      ('Siege', l10n.archetypeSiege, Icons.castle),
-      ('Bait', l10n.archetypeBait, Icons.pest_control),
-    ];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
@@ -291,24 +235,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.center,
-            children: archetypes
-                .map((a) => _buildArchetypeChip(a.$1, a.$2, a.$3))
-                .toList(),
-          ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
           Text(
             l10n.unlockAnalysis,
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
           ElevatedButton.icon(
-            onPressed: () => _triggerFullAnalysis(context, profile, battleLog),
+            onPressed: () => _showArchetypeSelector(context, profile, battleLog),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.black,
@@ -317,9 +252,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(30),
               ),
             ),
-            icon: const Icon(Icons.play_circle_fill),
+            icon: const Icon(Icons.style),
             label: Text(
-              l10n.watchAdButton,
+              l10n.chooseArchetypeTitle,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
           ),
@@ -334,6 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     PlayerProfile profile,
     List<CrBattle> battleLog,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -380,15 +316,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ],
                 ),
-                const Text('elixir médio', style: TextStyle(color: AppColors.textDisabled, fontSize: 8)),
+                Text(l10n.elixirAverageLabel, style: const TextStyle(color: AppColors.textDisabled, fontSize: 8)),
               ],
             ),
           ],
         ),
         const SizedBox(height: 14),
-        const Text(
-          'COMO JOGAR',
-          style: TextStyle(
+        Text(
+          l10n.howToPlayLabel,
+          style: const TextStyle(
             color: AppColors.successAccent,
             fontSize: 10,
             fontWeight: FontWeight.bold,
@@ -441,7 +377,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Expanded(
               child: _buildAnalysisSection(
-                'PONTOS FORTES',
+                l10n.strengthsLabel,
                 report.strengths,
                 AppColors.successAccent,
                 Icons.thumb_up,
@@ -450,7 +386,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: _buildAnalysisSection(
-                'PONTOS FRACOS',
+                l10n.weaknessesLabel,
                 report.weaknesses,
                 AppColors.errorAccent,
                 Icons.thumb_down,
@@ -460,9 +396,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         if (report.suggestedSwaps.isNotEmpty) ...[
           const SizedBox(height: 12),
-          const Text(
-            'TROCA SUGERIDA',
-            style: TextStyle(
+          Text(
+            l10n.suggestedSwapLabel,
+            style: const TextStyle(
               color: AppColors.primary,
               fontSize: 10,
               fontWeight: FontWeight.bold,
@@ -536,9 +472,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.symmetric(vertical: 8),
           ),
           icon: const Icon(Icons.refresh, size: 16),
-          label: const Text(
-            'Analisar Novamente',
-            style: TextStyle(fontSize: 12),
+          label: Text(
+            l10n.reAnalyze,
+            style: const TextStyle(fontSize: 12),
           ),
         ),
       ],
@@ -621,148 +557,208 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Widget _buildArchetypeChip(String key, String displayLabel, IconData icon) {
-    final isSelected = _selectedArchetype == key;
-    return ChoiceChip(
-      avatar: Icon(
-        icon,
-        size: 16,
-        color: isSelected ? Colors.black : AppColors.primary,
-      ),
-      label: Text(
-        displayLabel,
-        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-      ),
-      selected: isSelected,
-      onSelected: (selected) {
-        if (selected) setState(() => _selectedArchetype = key);
+  void _showArchetypeSelector(
+    BuildContext context,
+    PlayerProfile profile,
+    List<CrBattle> battleLog,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+
+    // (key for AI prompt, display name, description, icon, color)
+    final archetypes = [
+      ('Beatdown',     l10n.archetypeBeatdown,     l10n.archetypeBeatdownDesc,     Icons.bolt,             const Color(0xFFFF6B35)),
+      ('Control',      l10n.archetypeControl,       l10n.archetypeControlDesc,      Icons.shield,           const Color(0xFF4A90D9)),
+      ('Cycle',        l10n.archetypeCycle,         l10n.archetypeCycleDesc,        Icons.loop,             const Color(0xFF27AE60)),
+      ('Siege',        l10n.archetypeSiege,         l10n.archetypeSiegeDesc,        Icons.castle,           const Color(0xFF8B6914)),
+      ('Bait',         l10n.archetypeBait,          l10n.archetypeBaitDesc,         Icons.pest_control,     const Color(0xFFE1C40B)),
+      ('Bridge Spam',  l10n.archetypeBridgeSpam,    l10n.archetypeBridgeSpamDesc,   Icons.directions_run,   const Color(0xFFE67E22)),
+      ('LavaLoon',     l10n.archetypeLavaLoon,      l10n.archetypeLavaLoonDesc,     Icons.local_fire_department, const Color(0xFFE74C3C)),
+      ('Miner Poison', l10n.archetypeMinerPoison,   l10n.archetypeMinerPoisonDesc,  Icons.science,          const Color(0xFF8E44AD)),
+      ('Graveyard',    l10n.archetypeGraveyard,     l10n.archetypeGraveyardDesc,    Icons.nights_stay,      const Color(0xFF6C3483)),
+      ('Hybrid',       l10n.archetypeHybrid,        l10n.archetypeHybridDesc,       Icons.balance,          const Color(0xFF7F8C8D)),
+    ];
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
+          decoration: const BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.borderStrong,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Text(
+                  l10n.chooseArchetypeTitle,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
+                  itemCount: archetypes.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.border),
+                  itemBuilder: (_, i) {
+                    final (key, name, desc, icon, color) = archetypes[i];
+                    final isSelected = _selectedArchetype == key;
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      leading: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: color.withValues(alpha: 0.4)),
+                        ),
+                        child: Icon(icon, color: color, size: 20),
+                      ),
+                      title: Text(
+                        name,
+                        style: TextStyle(
+                          color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        desc,
+                        style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                      ),
+                      trailing: isSelected
+                          ? const Icon(Icons.check_circle, color: AppColors.primary, size: 18)
+                          : null,
+                      onTap: () {
+                        Navigator.of(sheetCtx).pop();
+                        setState(() => _selectedArchetype = key);
+                        _triggerFullAnalysis(context, profile, battleLog);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
       },
-      selectedColor: AppColors.primary,
-      backgroundColor: AppColors.border,
-      labelStyle: TextStyle(color: isSelected ? Colors.black : AppColors.textSecondary),
-      showCheckmark: false,
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context, PlayerProfile profile) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.borderMedium,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.borderMedium),
-        ),
-        child: Column(
-          children: [
-            // Always visible: name + tag + chevron toggle
-            GestureDetector(
-              onTap: () => setState(() => _headerExpanded = !_headerExpanded),
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            profile.name.toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            profile.tag,
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              letterSpacing: 1.2,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    AnimatedRotation(
-                      turns: _headerExpanded ? 0.5 : 0.0,
-                      duration: const Duration(milliseconds: 250),
-                      child: const Icon(
-                        Icons.keyboard_arrow_down,
-                        color: AppColors.textMuted,
-                        size: 28,
-                      ),
-                    ),
-                  ],
+  Future<void> _showProfileSheet(BuildContext context, PlayerProfile profile) async {
+    setState(() => _profileSheetOpen = true);
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetCtx) {
+        final l10n = AppLocalizations.of(context)!;
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.borderStrong,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            // Expandable section: arena button + divider + stats
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              child: _headerExpanded
-                  ? Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                          child: _buildArenaButton(context, profile),
-                        ),
-                        const Divider(
-                          height: 32,
-                          color: AppColors.borderStrong,
-                          indent: 20,
-                          endIndent: 20,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                          child: Builder(
-                            builder: (context) {
-                              final l10n = AppLocalizations.of(context)!;
-                              return Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  _buildStatItem(
-                                    l10n.trophiesLabel,
-                                    profile.trophies.toString(),
-                                    Icons.emoji_events,
-                                    AppColors.primary,
-                                  ),
-                                  _buildStatDivider(),
-                                  if (profile.bestTrophies != null) ...[
-                                    _buildStatItem(
-                                      l10n.bestRecordLabel,
-                                      profile.bestTrophies.toString(),
-                                      Icons.military_tech,
-                                      AppColors.warning,
-                                    ),
-                                    _buildStatDivider(),
-                                  ],
-                                  if (profile.expLevel != null)
-                                    _buildStatItem(
-                                      l10n.levelLabel,
-                                      profile.expLevel.toString(),
-                                      Icons.star,
-                                      AppColors.primary,
-                                    ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ],
-        ),
-      ),
+              const SizedBox(height: 20),
+              _buildArenaButton(context, profile),
+              const SizedBox(height: 16),
+              Text(
+                profile.name.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                profile.tag,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              const Divider(height: 32, color: AppColors.borderStrong),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildStatItem(
+                    l10n.trophiesLabel,
+                    profile.trophies.toString(),
+                    Icons.emoji_events,
+                    AppColors.primary,
+                  ),
+                  _buildStatDivider(),
+                  if (profile.bestTrophies != null) ...[
+                    _buildStatItem(
+                      l10n.bestRecordLabel,
+                      profile.bestTrophies.toString(),
+                      Icons.military_tech,
+                      AppColors.warning,
+                    ),
+                    _buildStatDivider(),
+                  ],
+                  if (profile.expLevel != null)
+                    _buildStatItem(
+                      l10n.levelLabel,
+                      profile.expLevel.toString(),
+                      Icons.star,
+                      AppColors.primary,
+                    ),
+                  if (profile.wins != null) ...[
+                    _buildStatDivider(),
+                    _buildStatItem(l10n.victory, profile.wins.toString(), Icons.check_circle_outline, AppColors.battleVictory),
+                  ],
+                  if (profile.losses != null) ...[
+                    _buildStatDivider(),
+                    _buildStatItem(l10n.defeat, profile.losses.toString(), Icons.cancel_outlined, AppColors.battleDefeat),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
+    if (mounted) setState(() => _profileSheetOpen = false);
   }
 
   Widget _buildArenaButton(BuildContext context, PlayerProfile profile) {
@@ -940,7 +936,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         .whereType<CrCard>()
         .toList();
     if (resolved.length != 8) return null;
-    return '${AppConstants.deckLinkBaseUrl}${resolved.map((c) => c.id).join(';')}';
+    return AppConstants.buildDeckUrl(resolved.map((c) => c.id).toList());
   }
 
   void _showArenaGuide(BuildContext context, String arenaName) {
@@ -1275,6 +1271,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required PlayerProfile profile,
     required List<CrBattle> battleLog,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     if (cards.isEmpty) {
       return Center(
         child: Text(
@@ -1285,7 +1282,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     final deckUrl =
-        '${AppConstants.deckLinkBaseUrl}${cards.map((c) => c.id).join(';')}';
+        AppConstants.buildDeckUrl(cards.map((c) => c.id).toList());
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
@@ -1325,9 +1322,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             icon: const Icon(Icons.share_rounded, size: 18),
-            label: const Text(
-              'Compartilhar Deck',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            label: Text(
+              l10n.shareDeckButton,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
           // Deck analysis — shown when analysis is available
@@ -1343,13 +1340,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 14),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.analytics_rounded, color: AppColors.accent, size: 14),
-                        SizedBox(width: 6),
+                        const Icon(Icons.analytics_rounded, color: AppColors.accent, size: 14),
+                        const SizedBox(width: 6),
                         Text(
-                          'ANÁLISE DO DECK ATUAL',
-                          style: TextStyle(color: AppColors.accent, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                          l10n.currentDeckAnalysisTitle,
+                          style: const TextStyle(color: AppColors.accent, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0),
                         ),
                       ],
                     ),
@@ -1389,14 +1386,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 16),
                   _buildInfoSection(
                     icon: Icons.psychology,
-                    title: 'ANÁLISE DO ESTILO DE JOGO',
+                    title: AppLocalizations.of(context)!.playstyleAnalysisTitle,
                     content: stratReport.playstyleAnalysis,
                     color: AppColors.accent,
                   ),
                   const SizedBox(height: 10),
                   _buildInfoSection(
                     icon: Icons.school,
-                    title: 'COACHING DO META',
+                    title: AppLocalizations.of(context)!.metaCoachingTitle,
                     content: stratReport.metaCoaching,
                     color: AppColors.accent,
                   ),
@@ -1457,6 +1454,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildAnalysisContent(
               context, report.strategy, profile, battleLog,
               savedAt: savedAt, isFromCache: isFromCache,
+              analyzedDeckIds: report.analyzedDeckIds,
             ),
           AiStrategyLoaded(:final report) =>
             _buildAnalysisContent(context, report, profile, battleLog),
@@ -1493,7 +1491,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     List<CrBattle> battleLog, {
     DateTime? savedAt,
     bool isFromCache = false,
+    List<int> analyzedDeckIds = const [],
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final cardById = {for (final c in profile.cards) c.id: c};
     final cardByName = {for (final c in profile.cards) c.name.toLowerCase(): c};
 
@@ -1515,7 +1515,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     // Build deck URL from verified player-collection IDs, not AI-returned ones.
     final resolvedDeckUrl = resolvedCards.length == 8
-        ? '${AppConstants.deckLinkBaseUrl}${resolvedCards.map((c) => c.id).join(';')}'
+        ? AppConstants.buildDeckUrl(resolvedCards.map((c) => c.id).toList())
         : report.deckLinkUrl;
 
     return SingleChildScrollView(
@@ -1525,7 +1525,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           // ── Saved analysis banner ──────────────────────────────
           if (isFromCache && savedAt != null) ...[
-            _buildCacheBanner(context, savedAt, profile),
+            _buildCacheBanner(context, savedAt, profile, analyzedDeckIds),
             const SizedBox(height: 10),
           ],
           // ── Suggested deck hero ────────────────────────────────
@@ -1565,7 +1565,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           // ── Re-analyze ─────────────────────────────────────────
           OutlinedButton.icon(
-            onPressed: () => _triggerFullAnalysis(context, profile, battleLog),
+            onPressed: () => _showArchetypeSelector(context, profile, battleLog),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.textMuted,
               side: const BorderSide(color: AppColors.borderStrong),
@@ -1573,14 +1573,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             icon: const Icon(Icons.ondemand_video, size: 16),
-            label: const Text('Reanalisar (assistir vídeo)', style: TextStyle(fontSize: 12)),
+            label: Text(l10n.reanalyzeWatchVideo, style: const TextStyle(fontSize: 12)),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              AppLocalizations.of(context)!.disclaimerText,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textDisabled,
+                fontSize: 8,
+                height: 1.4,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCacheBanner(BuildContext context, DateTime savedAt, PlayerProfile profile) {
+  Widget _buildCacheBanner(
+    BuildContext context,
+    DateTime savedAt,
+    PlayerProfile profile,
+    List<int> analyzedDeckIds,
+  ) {
     final day = savedAt.day.toString().padLeft(2, '0');
     final month = savedAt.month.toString().padLeft(2, '0');
     final hour = savedAt.hour.toString().padLeft(2, '0');
@@ -1600,7 +1618,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Análise salva em $label',
+              AppLocalizations.of(context)!.analysisSavedAt(label),
               style: const TextStyle(color: AppColors.accent, fontSize: 11, fontWeight: FontWeight.bold),
             ),
           ),
@@ -1621,6 +1639,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     double? avgElixir,
     String resolvedDeckUrl,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -1641,10 +1660,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 const Icon(Icons.style, color: AppColors.primary, size: 20),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'DECK SUGERIDO',
-                    style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2),
+                    l10n.suggestedDeckTitle,
+                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2),
                   ),
                 ),
                 if (avgElixir != null)
@@ -1696,6 +1715,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: resolvedDeckUrl.isNotEmpty
                         ? () async {
                             await Clipboard.setData(ClipboardData(text: resolvedDeckUrl));
+                            if (!context.mounted) return;
                             final url = Uri.parse(resolvedDeckUrl);
                             if (await canLaunchUrl(url)) {
                               await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -1709,7 +1729,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     icon: const Icon(Icons.download_rounded, size: 17),
-                    label: const Text('Abrir no Clash', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                    label: Text(l10n.openClashRoyale, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1733,7 +1753,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   icon: const Icon(Icons.copy, size: 15),
-                  label: const Text('Copiar link', style: TextStyle(fontSize: 11)),
+                  label: Text(l10n.copyLinkLabel, style: const TextStyle(fontSize: 11)),
                 ),
               ],
             ),
@@ -1760,7 +1780,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildSuggestedTile(BuildContext context, CrCard? card, String name) {
-    final rarityTxtClr = _rarityTextColor(card?.rarity);
+    final rarityTxtClr = _rarityTextColorFn(card?.rarity);
     return GestureDetector(
       onTap: () => CardGuideSheet.show(context, card ?? CrCard(id: 0, name: name, iconUrl: '')),
       child: ClipRRect(
@@ -1815,12 +1835,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildDeckBreakdownCard(BuildContext context, DeckBreakdown bd) {
+    final l10n = AppLocalizations.of(context)!;
     final roles = <_RoleEntry>[];
-    if (bd.winCondition?.isNotEmpty == true) roles.add(_RoleEntry('WIN CONDITION', bd.winCondition!, AppColors.primary));
-    if (bd.spells?.isNotEmpty == true) roles.add(_RoleEntry('FEITIÇOS', bd.spells!, AppColors.accent));
-    if (bd.airDefense?.isNotEmpty == true) roles.add(_RoleEntry('DEF. AÉREA', bd.airDefense!, AppColors.successAccent));
-    if (bd.support?.isNotEmpty == true) roles.add(_RoleEntry('SUPORTE', bd.support!, AppColors.accent));
-    if (bd.buildings?.isNotEmpty == true) roles.add(_RoleEntry('CONSTRUÇÕES', bd.buildings!, AppColors.warning));
+    if (bd.winCondition?.isNotEmpty == true) roles.add(_RoleEntry(l10n.roleWinCondition, bd.winCondition!, AppColors.primary));
+    if (bd.spells?.isNotEmpty == true) roles.add(_RoleEntry(l10n.roleSpells, bd.spells!, AppColors.accent));
+    if (bd.airDefense?.isNotEmpty == true) roles.add(_RoleEntry(l10n.roleAirDefense, bd.airDefense!, AppColors.successAccent));
+    if (bd.support?.isNotEmpty == true) roles.add(_RoleEntry(l10n.roleSupport, bd.support!, AppColors.accent));
+    if (bd.buildings?.isNotEmpty == true) roles.add(_RoleEntry(l10n.roleBuildings, bd.buildings!, AppColors.warning));
     if (roles.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -1833,11 +1854,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.account_tree_outlined, color: AppColors.primary, size: 16),
-              SizedBox(width: 8),
-              Text('COMPOSIÇÃO DO DECK', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.0)),
+              const Icon(Icons.account_tree_outlined, color: AppColors.primary, size: 16),
+              const SizedBox(width: 8),
+              Text(l10n.deckBreakdownTitle, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.0)),
             ],
           ),
           const SizedBox(height: 12),
@@ -1868,6 +1889,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildHowToPlayCta(BuildContext context, AiStrategyReport report) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
@@ -1885,21 +1907,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: AppColors.successAccent.withValues(alpha: 0.4)),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.military_tech, color: AppColors.successAccent, size: 24),
-            SizedBox(width: 14),
+            const Icon(Icons.military_tech, color: AppColors.successAccent, size: 24),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('COMO JOGAR', style: TextStyle(color: AppColors.successAccent, fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 1.2)),
-                  SizedBox(height: 2),
-                  Text('Abertura, defesa, condição de vitória e mais', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                  Text(l10n.howToPlayLabel, style: const TextStyle(color: AppColors.successAccent, fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 1.2)),
+                  const SizedBox(height: 2),
+                  Text('Abertura, defesa, condição de vitória e mais', style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: AppColors.successAccent, size: 22),
+            const Icon(Icons.chevron_right, color: AppColors.successAccent, size: 22),
           ],
         ),
       ),
@@ -1907,6 +1929,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildMatchupTipsCard(BuildContext context, List<MatchupTip> tips) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1917,11 +1940,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.compare_arrows, color: AppColors.accent, size: 16),
-              SizedBox(width: 8),
-              Text('DICAS DE MATCHUP', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.0)),
+              const Icon(Icons.compare_arrows, color: AppColors.accent, size: 16),
+              const SizedBox(width: 8),
+              Text(l10n.matchupTipsTitle, style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.0)),
             ],
           ),
           const SizedBox(height: 12),
@@ -1991,233 +2014,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildCardGrid(
-    BuildContext context,
-    List<CrCard> cards, {
-    required String emptyMessage,
-  }) {
-    if (cards.isEmpty) {
-      return Center(
-        child: Text(
-          emptyMessage,
-          style: const TextStyle(color: AppColors.textMuted),
-        ),
-      );
-    }
+  Widget _buildCardTile(CrCard card) => _buildCardTileWidget(card);
 
-    final sorted = [...cards];
-    sorted.sort((a, b) {
-      switch (_sortBy) {
-        case _SortBy.level:
-          return (b.level ?? 0).compareTo(a.level ?? 0);
-        case _SortBy.rarity:
-          return _rarityOrder(a.rarity).compareTo(_rarityOrder(b.rarity));
-        case _SortBy.elixir:
-          return (a.elixirCost ?? 0).compareTo(b.elixirCost ?? 0);
-      }
-    });
-
-    return Column(
-      children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: Row(
-            children: [
-              _buildSortChip('Nível', _SortBy.level),
-              const SizedBox(width: 6),
-              _buildSortChip('Raridade', _SortBy.rarity),
-              const SizedBox(width: 6),
-              _buildSortChip('Elixir', _SortBy.elixir),
-            ],
-          ),
-        ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 6,
-              mainAxisSpacing: 6,
-            ),
-            itemCount: sorted.length,
-            itemBuilder: (context, index) {
-              final card = sorted[index];
-              return GestureDetector(
-                onTap: () => CardGuideSheet.show(context, card),
-                child: _buildCardTile(card),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSortChip(String label, _SortBy value) {
-    final isSelected = _sortBy == value;
-    return FilterChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          color: isSelected ? Colors.black : AppColors.textSecondary,
-        ),
-      ),
-      selected: isSelected,
-      onSelected: (_) => setState(() => _sortBy = value),
-      selectedColor: AppColors.primary,
-      backgroundColor: AppColors.borderMedium,
-      checkmarkColor: Colors.black,
-      showCheckmark: false,
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      side: BorderSide(color: isSelected ? AppColors.primary : AppColors.borderStrong),
-    );
-  }
-
-  Widget _buildCardTile(CrCard card) {
-    final rarityTxtClr = _rarityTextColor(card.rarity);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Scale 1.5× to zoom past the transparent padding CR images have around the card art
-          SizedBox.expand(
-            child: Transform.scale(
-              scale: 1.1,
-              child: Image.network(
-                card.iconUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Center(
-                  child: Text(
-                    card.name.isNotEmpty ? card.name[0] : '?',
-                    style: const TextStyle(
-                      color: AppColors.textDisabled,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 4,
-            left: 4,
-            right: 4,
-            child: _buildLevelBadge(card, rarityTxtClr),
-          ),
-          if (MetaCards.isMeta(card.name))
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(10),
-                    bottomLeft: Radius.circular(6),
-                  ),
-                ),
-                child: const Text(
-                  'META',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 7,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ),
-          Positioned(top: 8, left: 0, child: _buildElixirDrop(card.elixirCost)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLevelBadge(CrCard card, Color rarityTxtClr) {
-    return Text(
-      'Level ${card.level ?? '?'}',
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.bold,
-        color: rarityTxtClr,
-        shadows: const [
-          Shadow(color: Colors.black, blurRadius: 4, offset: Offset(0, 1)),
-          Shadow(color: Colors.black, blurRadius: 2, offset: Offset(0, -1)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildElixirDrop(int? cost) {
-    if (cost == null) return const SizedBox.shrink();
-    return SizedBox(
-      width: 22,
-      height: 22,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Image.asset(
-            'assets/images/ui_icons/elixir.png',
-            width: 22,
-            height: 22,
-            fit: BoxFit.contain,
-          ),
-          Text(
-            '$cost',
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              shadows: [Shadow(color: Colors.black, blurRadius: 3, offset: Offset(0, 1))],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _rarityTextColor(String? rarity) {
-    switch (rarity?.toLowerCase()) {
-      case 'common':
-        return AppColors.rarityCommon;
-      case 'rare':
-        return AppColors.rarityRare;
-      case 'epic':
-        return AppColors.rarityEpic;
-      case 'legendary':
-        return AppColors.rarityLegendary;
-      case 'champion':
-        return AppColors.rarityChampion;
-      default:
-        return AppColors.rarityUnknown;
-    }
-  }
-
-  int _rarityOrder(String? rarity) {
-    switch (rarity?.toLowerCase()) {
-      case 'common':
-        return 0;
-      case 'rare':
-        return 1;
-      case 'epic':
-        return 2;
-      case 'legendary':
-        return 3;
-      case 'champion':
-        return 4;
-      default:
-        return 5;
-    }
-  }
+  Widget _buildElixirDrop(int? cost) => _buildElixirDropWidget(cost);
 
   Widget _buildHistoryTab(BuildContext context, List<CrBattle> battleLog) {
     final l10n = AppLocalizations.of(context)!;
@@ -2404,7 +2203,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     final deckUrl =
-        '${AppConstants.deckLinkBaseUrl}${cards.map((c) => c.id).join(';')}';
+        AppConstants.buildDeckUrl(cards.map((c) => c.id).toList());
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2431,6 +2230,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         TextButton.icon(
           onPressed: () async {
             await Clipboard.setData(ClipboardData(text: deckUrl));
+            if (!context.mounted) return;
             final url = Uri.parse(deckUrl);
             if (await canLaunchUrl(url)) {
               await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -2459,11 +2259,249 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 }
 
+// ── Card Grid Tab — isolated StatefulWidget so sort changes don't rebuild all tabs ──
+
+class _CardGridTab extends StatefulWidget {
+  final List<CrCard> cards;
+  final String emptyMessage;
+  const _CardGridTab({required this.cards, required this.emptyMessage});
+
+  @override
+  State<_CardGridTab> createState() => _CardGridTabState();
+}
+
+class _CardGridTabState extends State<_CardGridTab> {
+  _SortBy _sortBy = _SortBy.level;
+
+  Widget _buildSortChip(String label, _SortBy value) {
+    final isSelected = _sortBy == value;
+    return FilterChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: isSelected ? Colors.black : AppColors.textSecondary,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (_) => setState(() => _sortBy = value),
+      selectedColor: AppColors.primary,
+      backgroundColor: AppColors.borderMedium,
+      checkmarkColor: Colors.black,
+      showCheckmark: false,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      side: BorderSide(color: isSelected ? AppColors.primary : AppColors.borderStrong),
+    );
+  }
+
+  int _rarityOrder(String? rarity) {
+    switch (rarity?.toLowerCase()) {
+      case 'common':
+        return 0;
+      case 'rare':
+        return 1;
+      case 'epic':
+        return 2;
+      case 'legendary':
+        return 3;
+      case 'champion':
+        return 4;
+      default:
+        return 5;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.cards.isEmpty) {
+      return Center(
+        child: Text(
+          widget.emptyMessage,
+          style: const TextStyle(color: AppColors.textMuted),
+        ),
+      );
+    }
+
+    final sorted = [...widget.cards];
+    sorted.sort((a, b) {
+      switch (_sortBy) {
+        case _SortBy.level:
+          return (b.level ?? 0).compareTo(a.level ?? 0);
+        case _SortBy.rarity:
+          return _rarityOrder(a.rarity).compareTo(_rarityOrder(b.rarity));
+        case _SortBy.elixir:
+          return (a.elixirCost ?? 0).compareTo(b.elixirCost ?? 0);
+      }
+    });
+
+    return Column(
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            children: [
+              _buildSortChip('Nível', _SortBy.level),
+              const SizedBox(width: 6),
+              _buildSortChip('Raridade', _SortBy.rarity),
+              const SizedBox(width: 6),
+              _buildSortChip('Elixir', _SortBy.elixir),
+            ],
+          ),
+        ),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              childAspectRatio: 0.75,
+              crossAxisSpacing: 6,
+              mainAxisSpacing: 6,
+            ),
+            itemCount: sorted.length,
+            itemBuilder: (context, index) {
+              final card = sorted[index];
+              return GestureDetector(
+                onTap: () => CardGuideSheet.show(context, card),
+                child: _buildCardTileWidget(card),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _RoleEntry {
   final String role;
   final List<String> cards;
   final Color color;
   const _RoleEntry(this.role, this.cards, this.color);
+}
+
+// ── Top-level card tile helpers (shared by _ProfileScreenState and _CardGridTabState) ──
+
+Color _rarityTextColorFn(String? rarity) {
+  switch (rarity?.toLowerCase()) {
+    case 'common':
+      return AppColors.rarityCommon;
+    case 'rare':
+      return AppColors.rarityRare;
+    case 'epic':
+      return AppColors.rarityEpic;
+    case 'legendary':
+      return AppColors.rarityLegendary;
+    case 'champion':
+      return AppColors.rarityChampion;
+    default:
+      return AppColors.rarityUnknown;
+  }
+}
+
+Widget _buildElixirDropWidget(int? cost) {
+  if (cost == null) return const SizedBox.shrink();
+  return SizedBox(
+    width: 22,
+    height: 22,
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        Image.asset(
+          'assets/images/ui_icons/elixir.png',
+          width: 22,
+          height: 22,
+          fit: BoxFit.contain,
+        ),
+        Text(
+          '$cost',
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            shadows: [Shadow(color: Colors.black, blurRadius: 3, offset: Offset(0, 1))],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildCardTileWidget(CrCard card) {
+  final rarityTxtClr = _rarityTextColorFn(card.rarity);
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(10),
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        // Scale 1.1x to zoom past the transparent padding CR images have around the card art
+        SizedBox.expand(
+          child: Transform.scale(
+            scale: 1.1,
+            child: Image.network(
+              card.iconUrl,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => Center(
+                child: Text(
+                  card.name.isNotEmpty ? card.name[0] : '?',
+                  style: const TextStyle(
+                    color: AppColors.textDisabled,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 4,
+          left: 4,
+          right: 4,
+          child: Text(
+            'Level ${card.level ?? '?'}',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: rarityTxtClr,
+              shadows: const [
+                Shadow(color: Colors.black, blurRadius: 4, offset: Offset(0, 1)),
+                Shadow(color: Colors.black, blurRadius: 2, offset: Offset(0, -1)),
+              ],
+            ),
+          ),
+        ),
+        if (MetaCards.isMeta(card.name))
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(10),
+                  bottomLeft: Radius.circular(6),
+                ),
+              ),
+              child: const Text(
+                'META',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 7,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ),
+        Positioned(top: 8, left: 0, child: _buildElixirDropWidget(card.elixirCost)),
+      ],
+    ),
+  );
 }
 
 /// 3D pushable arena button — face slides down on press (pushable_button style).

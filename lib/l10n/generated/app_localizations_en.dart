@@ -232,6 +232,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archetypeBait => 'Bait';
 
   @override
+  String get archetypeBridgeSpam => 'Bridge Spam';
+
+  @override
+  String get archetypeLavaLoon => 'LavaLoon';
+
+  @override
+  String get archetypeMinerPoison => 'Miner Poison';
+
+  @override
+  String get archetypeGraveyard => 'Graveyard';
+
+  @override
+  String get archetypeHybrid => 'Hybrid';
+
+  @override
+  String get archetypeBeatdownDesc =>
+      'Slow pushes with powerful tanks. Build momentum and advance with overwhelming force.';
+
+  @override
+  String get archetypeControlDesc =>
+      'Defend efficiently and exploit your opponent\'s mistakes with surgical counter-attacks.';
+
+  @override
+  String get archetypeCycleDesc =>
+      'Cheap cards to cycle quickly. Repeat your win condition before the opponent can prepare.';
+
+  @override
+  String get archetypeSiegeDesc =>
+      'Use buildings like X-Bow or Mortar to attack the tower without direct combat.';
+
+  @override
+  String get archetypeBaitDesc =>
+      'Force the opponent to use the wrong spells, gaining advantage with cards they can\'t ignore.';
+
+  @override
+  String get archetypeBridgeSpamDesc =>
+      'Constant immediate pressure at the bridge. Fast, aggressive decks that overwhelm before defenses are ready.';
+
+  @override
+  String get archetypeLavaLoonDesc =>
+      'Lethal aerial combo: Lava Hound absorbs damage while the Balloon destroys towers.';
+
+  @override
+  String get archetypeMinerPoisonDesc =>
+      'Constant chip damage with Miner and Poison. Accumulated damage wins by attrition.';
+
+  @override
+  String get archetypeGraveyardDesc =>
+      'Summon skeletons directly on the enemy tower with the Graveyard spell to win through chip damage.';
+
+  @override
+  String get archetypeHybridDesc =>
+      'Balanced mix of attack and defense, adaptable to various situations and opponents.';
+
+  @override
+  String get chooseArchetypeTitle => 'Choose deck type';
+
+  @override
+  String get deckChangedWarning => 'Deck changed since analysis';
+
+  @override
   String get chooseArchetypeLabel => 'Choose your strategy:';
 
   @override
@@ -239,4 +300,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openClashRoyale => 'OPEN CLASH ROYALE';
+
+  @override
+  String get tabAi => 'AI';
+
+  @override
+  String get elixirAverageLabel => 'avg elixir';
+
+  @override
+  String get howToPlayLabel => 'HOW TO PLAY';
+
+  @override
+  String get strengthsLabel => 'STRENGTHS';
+
+  @override
+  String get weaknessesLabel => 'WEAKNESSES';
+
+  @override
+  String get suggestedSwapLabel => 'SUGGESTED SWAP';
+
+  @override
+  String get shareDeckButton => 'Share Deck';
+
+  @override
+  String get currentDeckAnalysisTitle => 'CURRENT DECK ANALYSIS';
+
+  @override
+  String get copyLinkLabel => 'Copy link';
+
+  @override
+  String get reanalyzeWatchVideo => 'Re-analyze (watch video)';
+
+  @override
+  String analysisSavedAt(String date) {
+    return 'Analysis saved on $date';
+  }
 }

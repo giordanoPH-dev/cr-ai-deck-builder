@@ -100,7 +100,43 @@
   "archetypeCycle": "Ciclo",
   "archetypeSiege": "Asedio",
   "archetypeBait": "Cebo",
+  "archetypeBridgeSpam": "Bridge Spam",
+  "archetypeLavaLoon": "LavaGlobo",
+  "archetypeMinerPoison": "Minero Veneno",
+  "archetypeGraveyard": "Cementerio",
+  "archetypeHybrid": "Híbrido",
+
+  "archetypeBeatdownDesc": "Empujadas lentas con tanques poderosos. Acumula fuerza y avanza con presión aplastante.",
+  "archetypeControlDesc": "Defiende eficientemente y explota los errores del oponente con contraataques quirúrgicos.",
+  "archetypeCycleDesc": "Cartas baratas para ciclar rápido. Repite tu condición de victoria antes de que el oponente se prepare.",
+  "archetypeSiegeDesc": "Usa edificios como X-Bow o Mortero para atacar la torre sin combate directo.",
+  "archetypeBaitDesc": "Fuerza al oponente a usar los hechizos incorrectos, creando ventaja con cartas que no puede ignorar.",
+  "archetypeBridgeSpamDesc": "Presión constante e inmediata en el puente. Decks rápidos y agresivos que abruman antes de que la defensa se organice.",
+  "archetypeLavaLoonDesc": "Combo aéreo letal: el Sabueso de Lava absorbe daño mientras el Globo destruye las torres.",
+  "archetypeMinerPoisonDesc": "Daño constante con Minero y Veneno. El daño acumulado gana por agotamiento del oponente.",
+  "archetypeGraveyardDesc": "Invoca esqueletos directamente sobre la torre enemiga con el hechizo Cementerio para ganar por chip damage.",
+  "archetypeHybridDesc": "Mezcla equilibrada de ataque y defensa, adaptable a diversas situaciones y oponentes.",
+
+  "chooseArchetypeTitle": "Elige el tipo de deck",
+  "deckChangedWarning": "Deck cambiado desde el análisis",
   "chooseArchetypeLabel": "Elige tu estrategia:",
   "currentArenaLabel": "Arena actual",
-  "openClashRoyale": "ABRIR CLASH ROYALE"
+  "openClashRoyale": "ABRIR CLASH ROYALE",
+
+  "tabAi": "IA",
+  "elixirAverageLabel": "elixir promedio",
+  "howToPlayLabel": "CÓMO JUGAR",
+  "strengthsLabel": "PUNTOS FUERTES",
+  "weaknessesLabel": "PUNTOS DÉBILES",
+  "suggestedSwapLabel": "CAMBIO SUGERIDO",
+  "shareDeckButton": "Compartir Deck",
+  "currentDeckAnalysisTitle": "ANÁLISIS DEL DECK ACTUAL",
+  "copyLinkLabel": "Copiar enlace",
+  "reanalyzeWatchVideo": "Re-analizar (ver video)",
+  "analysisSavedAt": "Análisis guardado el {date}",
+  "@analysisSavedAt": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  }
 }

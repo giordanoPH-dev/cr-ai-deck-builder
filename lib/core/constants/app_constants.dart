@@ -13,7 +13,14 @@ class AppConstants {
 
   // ── Clash Royale API ─────────────────────────────────────
   static const String clashApiBaseUrl = 'https://proxy.royaleapi.dev/v1';
-  static const String deckLinkBaseUrl = 'https://link.clashroyale.com/deck/en?deck=';
+
+  /// Builds a Clash Royale deep-link that opens the "Copy to Deck" dialog.
+  /// Uses the clashroyale:// URI scheme wrapped in the link.clashroyale.com HTTPS gateway.
+  static String buildDeckUrl(List<int> cardIds) {
+    final ids = cardIds.join(';');
+    final slots = List.filled(cardIds.length, '0').join(';');
+    return 'https://link.clashroyale.com/en?clashroyale://copyDeck?deck=$ids&slots=$slots';
+  }
 
   // ── LLM ──────────────────────────────────────────────────
   static const String geminiModel = 'gemini-2.5-flash-lite';

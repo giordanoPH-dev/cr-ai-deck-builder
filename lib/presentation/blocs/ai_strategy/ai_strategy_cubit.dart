@@ -118,18 +118,44 @@ class AiStrategyCubit extends Cubit<AiStrategyState> {
     );
   }
 
-  Future<void> loadSavedAnalysis(String playerTag) async {
+  Future<void> loadSavedAnalysis(
+    String playerTag, {
+    List<int>? currentDeckIds,
+  }) async {
     final result = await _aiRepository.loadSavedAnalysis(playerTag: playerTag);
     result.fold(
       (_) {},
       (data) {
         if (data != null) {
           final (report, savedAt) = data;
+          if (currentDeckIds != null &&
+              report.analyzedDeckIds.isNotEmpty &&
+              report.analyzedDeckIds.toSet() != currentDeckIds.toSet()) {
+            _aiRepository.clearSavedAnalysis(playerTag: playerTag);
+            _logger.info('AiStrategyCubit: Cleared stale analysis (deck changed)', metadata: {'player': playerTag});
+            return;
+          }
           emit(FullAnalysisLoaded(report: report, savedAt: savedAt, isFromCache: true));
           _logger.info('AiStrategyCubit: Saved analysis restored', metadata: {'player': playerTag});
         }
       },
     );
+  }
+
+  /// Clears the saved analysis if the player's current deck differs from the
+  /// deck used when the analysis was generated. Called when the analysis was
+  /// already loaded (e.g., from the splash screen) before the profile screen
+  /// had access to the current deck.
+  void validateDeckConsistency(String playerTag, List<int> currentDeckIds) {
+    final s = state;
+    if (s is FullAnalysisLoaded && s.isFromCache) {
+      final analyzed = s.report.analyzedDeckIds;
+      if (analyzed.isNotEmpty && analyzed.toSet() != currentDeckIds.toSet()) {
+        _aiRepository.clearSavedAnalysis(playerTag: playerTag);
+        emit(const AiStrategyInitial());
+        _logger.info('AiStrategyCubit: Cleared stale analysis (deck changed post-load)', metadata: {'player': playerTag});
+      }
+    }
   }
 
   Future<void> clearSavedAnalysis(String playerTag) async {

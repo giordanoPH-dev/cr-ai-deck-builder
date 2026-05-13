@@ -233,6 +233,67 @@ class AppLocalizationsEs extends AppLocalizations {
   String get archetypeBait => 'Cebo';
 
   @override
+  String get archetypeBridgeSpam => 'Bridge Spam';
+
+  @override
+  String get archetypeLavaLoon => 'LavaGlobo';
+
+  @override
+  String get archetypeMinerPoison => 'Minero Veneno';
+
+  @override
+  String get archetypeGraveyard => 'Cementerio';
+
+  @override
+  String get archetypeHybrid => 'Híbrido';
+
+  @override
+  String get archetypeBeatdownDesc =>
+      'Empujadas lentas con tanques poderosos. Acumula fuerza y avanza con presión aplastante.';
+
+  @override
+  String get archetypeControlDesc =>
+      'Defiende eficientemente y explota los errores del oponente con contraataques quirúrgicos.';
+
+  @override
+  String get archetypeCycleDesc =>
+      'Cartas baratas para ciclar rápido. Repite tu condición de victoria antes de que el oponente se prepare.';
+
+  @override
+  String get archetypeSiegeDesc =>
+      'Usa edificios como X-Bow o Mortero para atacar la torre sin combate directo.';
+
+  @override
+  String get archetypeBaitDesc =>
+      'Fuerza al oponente a usar los hechizos incorrectos, creando ventaja con cartas que no puede ignorar.';
+
+  @override
+  String get archetypeBridgeSpamDesc =>
+      'Presión constante e inmediata en el puente. Decks rápidos y agresivos que abruman antes de que la defensa se organice.';
+
+  @override
+  String get archetypeLavaLoonDesc =>
+      'Combo aéreo letal: el Sabueso de Lava absorbe daño mientras el Globo destruye las torres.';
+
+  @override
+  String get archetypeMinerPoisonDesc =>
+      'Daño constante con Minero y Veneno. El daño acumulado gana por agotamiento del oponente.';
+
+  @override
+  String get archetypeGraveyardDesc =>
+      'Invoca esqueletos directamente sobre la torre enemiga con el hechizo Cementerio para ganar por chip damage.';
+
+  @override
+  String get archetypeHybridDesc =>
+      'Mezcla equilibrada de ataque y defensa, adaptable a diversas situaciones y oponentes.';
+
+  @override
+  String get chooseArchetypeTitle => 'Elige el tipo de deck';
+
+  @override
+  String get deckChangedWarning => 'Deck cambiado desde el análisis';
+
+  @override
   String get chooseArchetypeLabel => 'Elige tu estrategia:';
 
   @override
@@ -240,4 +301,39 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get openClashRoyale => 'ABRIR CLASH ROYALE';
+
+  @override
+  String get tabAi => 'IA';
+
+  @override
+  String get elixirAverageLabel => 'elixir promedio';
+
+  @override
+  String get howToPlayLabel => 'CÓMO JUGAR';
+
+  @override
+  String get strengthsLabel => 'PUNTOS FUERTES';
+
+  @override
+  String get weaknessesLabel => 'PUNTOS DÉBILES';
+
+  @override
+  String get suggestedSwapLabel => 'CAMBIO SUGERIDO';
+
+  @override
+  String get shareDeckButton => 'Compartir Deck';
+
+  @override
+  String get currentDeckAnalysisTitle => 'ANÁLISIS DEL DECK ACTUAL';
+
+  @override
+  String get copyLinkLabel => 'Copiar enlace';
+
+  @override
+  String get reanalyzeWatchVideo => 'Re-analizar (ver video)';
+
+  @override
+  String analysisSavedAt(String date) {
+    return 'Análisis guardado el $date';
+  }
 }

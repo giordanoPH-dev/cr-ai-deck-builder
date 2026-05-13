@@ -532,6 +532,108 @@ abstract class AppLocalizations {
   /// **'Bait'**
   String get archetypeBait;
 
+  /// No description provided for @archetypeBridgeSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge Spam'**
+  String get archetypeBridgeSpam;
+
+  /// No description provided for @archetypeLavaLoon.
+  ///
+  /// In en, this message translates to:
+  /// **'LavaLoon'**
+  String get archetypeLavaLoon;
+
+  /// No description provided for @archetypeMinerPoison.
+  ///
+  /// In en, this message translates to:
+  /// **'Miner Poison'**
+  String get archetypeMinerPoison;
+
+  /// No description provided for @archetypeGraveyard.
+  ///
+  /// In en, this message translates to:
+  /// **'Graveyard'**
+  String get archetypeGraveyard;
+
+  /// No description provided for @archetypeHybrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Hybrid'**
+  String get archetypeHybrid;
+
+  /// No description provided for @archetypeBeatdownDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow pushes with powerful tanks. Build momentum and advance with overwhelming force.'**
+  String get archetypeBeatdownDesc;
+
+  /// No description provided for @archetypeControlDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Defend efficiently and exploit your opponent\'s mistakes with surgical counter-attacks.'**
+  String get archetypeControlDesc;
+
+  /// No description provided for @archetypeCycleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Cheap cards to cycle quickly. Repeat your win condition before the opponent can prepare.'**
+  String get archetypeCycleDesc;
+
+  /// No description provided for @archetypeSiegeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use buildings like X-Bow or Mortar to attack the tower without direct combat.'**
+  String get archetypeSiegeDesc;
+
+  /// No description provided for @archetypeBaitDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Force the opponent to use the wrong spells, gaining advantage with cards they can\'t ignore.'**
+  String get archetypeBaitDesc;
+
+  /// No description provided for @archetypeBridgeSpamDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Constant immediate pressure at the bridge. Fast, aggressive decks that overwhelm before defenses are ready.'**
+  String get archetypeBridgeSpamDesc;
+
+  /// No description provided for @archetypeLavaLoonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Lethal aerial combo: Lava Hound absorbs damage while the Balloon destroys towers.'**
+  String get archetypeLavaLoonDesc;
+
+  /// No description provided for @archetypeMinerPoisonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Constant chip damage with Miner and Poison. Accumulated damage wins by attrition.'**
+  String get archetypeMinerPoisonDesc;
+
+  /// No description provided for @archetypeGraveyardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Summon skeletons directly on the enemy tower with the Graveyard spell to win through chip damage.'**
+  String get archetypeGraveyardDesc;
+
+  /// No description provided for @archetypeHybridDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced mix of attack and defense, adaptable to various situations and opponents.'**
+  String get archetypeHybridDesc;
+
+  /// No description provided for @chooseArchetypeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose deck type'**
+  String get chooseArchetypeTitle;
+
+  /// No description provided for @deckChangedWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Deck changed since analysis'**
+  String get deckChangedWarning;
+
   /// No description provided for @chooseArchetypeLabel.
   ///
   /// In en, this message translates to:
@@ -549,6 +651,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OPEN CLASH ROYALE'**
   String get openClashRoyale;
+
+  /// No description provided for @tabAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get tabAi;
+
+  /// No description provided for @elixirAverageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'avg elixir'**
+  String get elixirAverageLabel;
+
+  /// No description provided for @howToPlayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'HOW TO PLAY'**
+  String get howToPlayLabel;
+
+  /// No description provided for @strengthsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'STRENGTHS'**
+  String get strengthsLabel;
+
+  /// No description provided for @weaknessesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'WEAKNESSES'**
+  String get weaknessesLabel;
+
+  /// No description provided for @suggestedSwapLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'SUGGESTED SWAP'**
+  String get suggestedSwapLabel;
+
+  /// No description provided for @shareDeckButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Deck'**
+  String get shareDeckButton;
+
+  /// No description provided for @currentDeckAnalysisTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'CURRENT DECK ANALYSIS'**
+  String get currentDeckAnalysisTitle;
+
+  /// No description provided for @copyLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get copyLinkLabel;
+
+  /// No description provided for @reanalyzeWatchVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-analyze (watch video)'**
+  String get reanalyzeWatchVideo;
+
+  /// No description provided for @analysisSavedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis saved on {date}'**
+  String analysisSavedAt(String date);
 }
 
 class _AppLocalizationsDelegate
