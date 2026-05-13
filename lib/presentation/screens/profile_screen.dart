@@ -131,6 +131,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             actions: [
+              if (_currentIndex == 0)
+                BlocBuilder<AiStrategyCubit, AiStrategyState>(
+                  builder: (ctx, aiState) {
+                    final hasAnalysis =
+                        aiState is FullAnalysisLoaded || aiState is AiStrategyLoaded;
+                    if (!hasAnalysis) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: const Icon(Icons.auto_awesome, color: AppColors.primary),
+                      tooltip: AppLocalizations.of(ctx)!.reAnalyze,
+                      onPressed: () =>
+                          _showArchetypeSelector(context, profile, battleLog),
+                    );
+                  },
+                ),
               IconButton(
                 icon: const Icon(Icons.refresh),
                 onPressed: () =>
@@ -1493,7 +1507,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     bool isFromCache = false,
     List<int> analyzedDeckIds = const [],
   }) {
-    final l10n = AppLocalizations.of(context)!;
     final cardById = {for (final c in profile.cards) c.id: c};
     final cardByName = {for (final c in profile.cards) c.name.toLowerCase(): c};
 
@@ -1563,19 +1576,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildConfidenceCard(report),
           const SizedBox(height: 14),
 
-          // ── Re-analyze ─────────────────────────────────────────
-          OutlinedButton.icon(
-            onPressed: () => _showArchetypeSelector(context, profile, battleLog),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textMuted,
-              side: const BorderSide(color: AppColors.borderStrong),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            icon: const Icon(Icons.ondemand_video, size: 16),
-            label: Text(l10n.reanalyzeWatchVideo, style: const TextStyle(fontSize: 12)),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text(
